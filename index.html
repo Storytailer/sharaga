@@ -396,7 +396,19 @@ function syncUp(){
   setStatus('Отправляю в облако…');
   cfFetch(CLOUD_URL, {method:'POST', headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY}, body:JSON.stringify({pairs:pairData})})
     .then(function(d){ setStatus(d.ok ? 'Отправлено ✔ ассистент получил задания' : 'Ошибка: '+(d.error||'нет ответа')); })
-    .catch(function(){ setStatus('⚠ Ошибка сети — проверь интернет. Иногда закрывают доступ к *.workers.dev (антивирус/VPN/сеть); данные при этом никуда не исчезнут — нажми «⬇ Экспорт файл», чтобы сохранить копию.'); });
+    .catch(function(e){ setStatus('⚠ Не удалось отправить: ' + errDetail(e) + '. Проверь, что на телефоне открывается ' + CLOUD_URL + ' (должен показаться JSON). Если нет — их домен блокирует сеть/VPN/антивирус: попробуй другую сеть или отключи VPN, либо сохрани копию кнопкой «⬇ Экспорт файл».'); });
+}
+function errDetail(e){
+  if (!e) return 'нет соединения';
+  const m = (e && e.message) ? e.message : '';
+  if (m === 'http 401') return 'облако отвергло ключ';
+  if (m === 'http 403') return 'облако запретило запрос';
+  if (m === 'http 404') return 'облако не найдено — адрес сменился';
+  if (m === 'http 500') return 'ошибка на сервере облака (500)';
+  if (m === 'http 429') return 'облако перегружено (429)';
+  if (m === 'bad-json') return 'облако вернуло непонятный ответ';
+  if (m.indexOf('http ') === 0) return 'сервер ответил ' + m.slice(5);
+  return 'сеть/сервер (' + (e.name || '?') + (m ? ': ' + m : '') + ')';
 }
 function syncDown(){
   setStatus('Загружаю из облака…');
@@ -408,7 +420,7 @@ function syncDown(){
         setStatus('Готово ✔ данные из облака загружены');
       } else { setStatus('⚠ Не удалось загрузить из облака'); }
     })
-    .catch(function(){ setStatus('⚠ Ошибка сети — проверь интернет.'); });
+    .catch(function(e){ setStatus('⚠ Не удалось загрузить: ' + errDetail(e) + '.'); });
 }
 function autoCloud(){
   cfFetch(CLOUD_URL)
