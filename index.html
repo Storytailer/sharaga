@@ -381,6 +381,7 @@ migratePairData();
 // ====== ОБЛАКО (Cloudflare) ======
 const CLOUD_URL = 'https://sharaga-sync.sharaga.workers.dev/api/data';
 const CLOUD_KEY = 'sharaga-sync-2026';
+const CLOUD_MIRROR = 'https://storytailer.github.io/sharaga/cloud/ready.json';
 function cfFetch(url, opts){
   let ctrl = null, t = 0;
   if (typeof AbortController !== 'undefined'){ ctrl = new AbortController(); t = setTimeout(function(){ ctrl.abort(); }, 20000); }
@@ -410,27 +411,35 @@ function errDetail(e){
   if (m.indexOf('http ') === 0) return 'сервер ответил ' + m.slice(5);
   return 'сеть/сервер (' + (e.name || '?') + (m ? ': ' + m : '') + ')';
 }
+function cloudPairs(){
+  return cfFetch(CLOUD_URL).then(function(d){
+    if (d.ok && d.data && d.data.pairs) return d.data.pairs;
+    throw new Error('empty');
+  }).catch(function(e){
+    if (e && e.message === 'empty') throw e;
+    return cfFetch(CLOUD_MIRROR).then(function(d){
+      if (d.ok && d.data && d.data.pairs) return d.data.pairs;
+      throw new Error('empty');
+    });
+  });
+}
 function syncDown(){
   setStatus('Загружаю из облака…');
-  cfFetch(CLOUD_URL)
-    .then(function(d){
-      if(d.ok && d.data && d.data.pairs){
-        pairData = Object.assign({}, d.data.pairs || {});
-        savePairs(); renderLists();
-        setStatus('Готово ✔ данные из облака загружены');
-      } else { setStatus('⚠ Не удалось загрузить из облака'); }
+  cloudPairs()
+    .then(function(pairs){
+      pairData = Object.assign({}, pairs || {});
+      savePairs(); renderLists();
+      setStatus('Готово ✔ данные получены');
     })
-    .catch(function(e){ setStatus('⚠ Не удалось загрузить: ' + errDetail(e) + '.'); });
+    .catch(function(e){ setStatus('⚠ Не удалось загрузить: ' + errDetail(e) + (e && e.message === 'empty' ? ' (в облаке пока пусто)' : '') + '.'); });
 }
 function autoCloud(){
-  cfFetch(CLOUD_URL)
-    .then(function(d){
-      if(d.ok && d.data && Object.keys(d.data.pairs||{}).length){
-        pairData = Object.assign({}, pairData, d.data.pairs);
-        savePairs(); renderLists();
-      }
-    })
-    .catch(function(){});
+  cloudPairs().then(function(pairs){
+    if (Object.keys(pairs||{}).length){
+      pairData = Object.assign({}, pairData, pairs);
+      savePairs(); renderLists();
+    }
+  }).catch(function(){});
 }
 
 const MONTH = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];

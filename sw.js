@@ -1,4 +1,4 @@
-const CACHE = 'sharaga-v3';
+const CACHE = 'sharaga-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -18,6 +18,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
+  if (e.request.url.indexOf('/cloud/') > -1) { e.respondWith(fetch(e.request)); return; }
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fetchP = fetch(e.request).then(res => {
