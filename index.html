@@ -47,6 +47,11 @@
     --shadowup:0 8px 22px rgba(0,0,0,.45);
     --overlay:rgba(0,0,0,.6);
   }
+  .pendbox { margin-top:10px; padding:11px 13px; border-radius:12px; background:#fff5e0; border:1px solid #f0d49a; color:#6b4c10; font-size:13px; line-height:1.45; }
+  html.dark .pendbox { background:#3a2f16; border-color:#6b5524; color:#f0d9a8; }
+  .diag { margin-top:10px; font-size:12.5px; line-height:1.55; font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+          white-space:pre-wrap; word-break:break-word; background:var(--card2); border:1px solid var(--line);
+          border-radius:12px; padding:11px 12px; max-height:340px; overflow:auto; }
   * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   html,body { margin:0; }
   body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); padding-bottom:70px; transition:background .25s,color .25s; }
@@ -201,8 +206,14 @@
     <button class="btn" onclick="syncUp()">⬆ В облако (отправить ДЗ)</button>
     <button class="btn sec" onclick="syncDown()">⬇ Из облака (получить готовое)</button>
     <p class="synote" id="syncStatus" style="margin-top:10px"></p>
+    <div class="pendbox" id="pendingBox" style="display:none">
+      ⏳ Есть задания, которые не ушли в облако. Отправлю сам, как только сеть пустит —
+      или нажми «⬆ В облако» ещё раз.
+      <button class="btn sec" onclick="retryPending(false)" style="margin-top:8px">↻ Попробовать сейчас</button>
+    </div>
     <div class="filehint">
-      <div class="flabel">Файл домашка.json (запасной вариант)</div>
+      <div class="flabel">Если облако недоступно</div>
+      <button class="btn sec" onclick="shareJSON()">📤 Отправить файлом</button>
       <button class="btn sec" onclick="exportJSON()">⬇ Экспорт файл</button>
       <button class="btn sec" onclick="document.getElementById('importFile').click()">⬆ Импорт файл</button>
       <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
@@ -216,7 +227,7 @@
       <span>Напоминать о начале пары</span>
     </label>
     <div class="setrow setrow-sub">
-      <span>За сколько напомнить</span>
+      <span>Отсчёт в приложении</span>
       <select id="notifMin" onchange="saveNotifSet()">
         <option value="5">за 5 мин</option>
         <option value="10">за 10 мин</option>
@@ -226,6 +237,16 @@
       </select>
     </div>
     <p class="synote" id="notifPerm" style="margin-top:6px"></p>
+    <p class="synote" style="margin-top:4px;opacity:.8">Push с сервера приходит примерно за 10–15 минут до пары и утром — списком на день. Работает, даже когда приложение закрыто.</p>
+  </div>
+
+  <div class="syncbox">
+    <div class="flabel">🩺 Диагностика</div>
+    <p class="synote">Если что-то не работает — нажми и покажи результат ассистенту.</p>
+    <button class="btn sec" onclick="runDiag()">Проверить всё</button>
+    <button class="btn sec" onclick="testLocalNotif()">Тест уведомления</button>
+    <div id="diagOut" class="diag" style="display:none"></div>
+    <button class="btn sec" id="diagCopy" style="display:none" onclick="copyDiag()">📋 Скопировать отчёт</button>
   </div>
 </div>
 </div>
@@ -259,7 +280,7 @@
   </div>
 </div>
 
-<div class="footer">Шарага · данные сохраняются на устройстве · календарь Б-ОРМ-41 (сен–окт 2026)</div>
+<div class="footer">Шарага <span id="verTag"></span> · данные сохраняются на устройстве · календарь Б-ОРМ-41 (сен–окт 2026)</div>
 
 <script>
 // ====== ТЕМА ======
@@ -271,7 +292,30 @@ function applyTheme(dark){
 }
 function toggleTheme(){ applyTheme(!document.documentElement.classList.contains('dark')); }
 if (localStorage.getItem(TKEY) === 'dark'){ document.documentElement.classList.add('dark'); document.getElementById('themeBtn').textContent = '☀️'; }
-if ('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('./sw.js').catch(function(){}); }); }
+const APP_VERSION = 'v9 · 2026-09-09';
+if ('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('./sw.js').then(function(reg){
+      // если пришла новая версия — активируем её и перезагружаемся один раз
+      reg.addEventListener('updatefound', function(){
+        const nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', function(){
+          if (nw.state === 'installed' && navigator.serviceWorker.controller){
+            nw.postMessage({ type: 'SKIP_WAITING' });
+          }
+        });
+      });
+      setInterval(function(){ reg.update().catch(function(){}); }, 60 * 60 * 1000);
+    }).catch(function(){});
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function(){
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    });
+  });
+}
 </script>
 
 <script>
@@ -426,16 +470,101 @@ function crudRead(){
     try { const o = JSON.parse(s); return (o && o.pairs) ? o.pairs : null; } catch(e){ return null; }
   });
 }
+// ====== ОТПРАВКА С ПОВТОРАМИ ======
+// У телефона канал до workers.dev бывает закрыт оператором. Раньше отправка
+// просто падала и данные оставались только на устройстве. Теперь неудачная
+// отправка кладётся в очередь и уходит сама, как только сеть позволит.
+const QKEY = 'sharaga_pending';
+const CHKEY = 'sharaga_last_channel';
+
+function workerWrite(pairs){
+  return cfFetch(CLOUD_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY},
+    body:JSON.stringify({pairs:pairs})
+  }).then(function(d){ if (!d || !d.ok) throw new Error(d && d.error ? d.error : 'bad-json'); return 'воркер'; });
+}
+function crudChannel(pairs){ return crudWrite(pairs).then(function(){ return 'crudcrud'; }); }
+
+function channels(){
+  const list = [
+    { name:'воркер', run: workerWrite },
+    { name:'crudcrud', run: crudChannel }
+  ];
+  const last = localStorage.getItem(CHKEY);
+  if (last){
+    const i = list.findIndex(function(c){ return c.name === last; });
+    if (i > 0) list.unshift(list.splice(i, 1)[0]);
+  }
+  return list;
+}
+
+function pushAll(pairs){
+  const list = channels();
+  let lastErr = null;
+  const step = function(i){
+    if (i >= list.length) return Promise.reject(lastErr || new Error('нет каналов'));
+    return list[i].run(pairs).then(function(via){
+      localStorage.setItem(CHKEY, list[i].name);
+      return via;
+    }, function(e){ lastErr = e; return step(i + 1); });
+  };
+  return step(0);
+}
+
+function hasPending(){ return !!localStorage.getItem(QKEY); }
+function setPending(pairs){ try { localStorage.setItem(QKEY, JSON.stringify(pairs)); } catch(e){} updatePendingBadge(); }
+function clearPending(){ localStorage.removeItem(QKEY); updatePendingBadge(); }
+function updatePendingBadge(){
+  const el = document.getElementById('pendingBox');
+  if (el) el.style.display = hasPending() ? 'block' : 'none';
+}
+
 function syncUp(){
   if (!Object.keys(pairData).length){ setStatus('Нечего отправлять — сначала запиши задание у пары'); return; }
   setStatus('Отправляю в облако…');
-  cfFetch(CLOUD_URL, {method:'POST', headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY}, body:JSON.stringify({pairs:pairData})})
-    .then(function(d){ setStatus(d.ok ? 'Отправлено ✔ ассистент получил задания' : 'Ошибка: '+(d.error||'нет ответа')); })
-    .catch(function(){
-      return crudWrite(pairData)
-        .then(function(){ setStatus('Отправлено ✔ (канал crudcrud) ассистент получил задания'); })
-        .catch(function(e){ setStatus('⚠ Не удалось отправить ни одним каналом: ' + errDetail(e) + '. Сеть закрывает и workers.dev, и crudcrud.com — попробуй другую сеть (Wi-Fi или мобильный интернет), отключи VPN, либо сохрани копию кнопкой «⬇ Экспорт файл».'); });
-    });
+  pushAll(pairData).then(function(via){
+    clearPending();
+    setStatus('Отправлено ✔ (' + via + ') ассистент получил задания');
+  }, function(e){
+    setPending(pairData);
+    setStatus('⚠ Сейчас не ушло: ' + errDetail(e) + '. Задания сохранены и отправятся сами, как только сеть пустит. Если срочно — жми «📤 Отправить файлом» и пришли файл ассистенту.');
+  });
+}
+
+// Автодосыл: при запуске, при возврате в приложение и при появлении сети.
+function retryPending(silent){
+  if (!hasPending()) return;
+  let pairs;
+  try { pairs = JSON.parse(localStorage.getItem(QKEY)); } catch(e){ clearPending(); return; }
+  if (!pairs || !Object.keys(pairs).length){ clearPending(); return; }
+  // отправляем самое свежее, а не снимок момента ошибки
+  const merged = Object.assign({}, pairs, pairData);
+  pushAll(merged).then(function(via){
+    clearPending();
+    if (!silent) setStatus('Отложенная отправка прошла ✔ (' + via + ')');
+    else setStatus('Задания доотправлены в облако ✔ (' + via + ')');
+  }, function(){});
+}
+window.addEventListener('online', function(){ retryPending(true); });
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) retryPending(true); });
+
+// Гарантированный запасной канал: файл уходит через «Поделиться» в любой
+// мессенджер — это не зависит от того, какие домены закрыл оператор.
+function shareJSON(){
+  const text = JSON.stringify({ pairs: pairData }, null, 2);
+  const fname = 'домашка.json';
+  const file = (function(){
+    try { return new File([text], fname, { type: 'application/json' }); } catch(e){ return null; }
+  })();
+  if (file && navigator.canShare && navigator.canShare({ files: [file] })){
+    navigator.share({ files: [file], title: 'Домашка' })
+      .then(function(){ setStatus('Файл отправлен ✔ пришли его ассистенту'); })
+      .catch(function(){});
+    return;
+  }
+  exportJSON();
+  setStatus('Файл сохранён в «Загрузки» — пришли его ассистенту любым мессенджером.');
 }
 function errDetail(e){
   if (!e) return 'нет соединения';
@@ -447,6 +576,8 @@ function errDetail(e){
   if (m === 'http 429') return 'облако перегружено (429)';
   if (m === 'bad-json') return 'облако вернуло непонятный ответ';
   if (m.indexOf('http ') === 0) return 'сервер ответил ' + m.slice(5);
+  if (e.name === 'AbortError') return 'не ответило вовремя — похоже, канал закрыт';
+  if (e.name === 'TypeError') return 'соединение не установилось — адрес заблокирован или нет сети';
   return 'сеть/сервер (' + (e.name || '?') + (m ? ': ' + m : '') + ')';
 }
 function cloudPairs(){
@@ -670,10 +801,17 @@ setTimeout(autoCloud, 300);
 const NKEY_ON = 'sharaga_notif_on';
 const NKEY_MIN = 'sharaga_notif_min';
 const NKEY_SENT = 'sharaga_notif_sent';
+const NKEY_SUB = 'sharaga_push_sub';
 let notifOn = localStorage.getItem(NKEY_ON) === '1';
 let notifMin = parseInt(localStorage.getItem(NKEY_MIN) || '5', 10);
 let notifSent = {};
 try { notifSent = JSON.parse(localStorage.getItem(NKEY_SENT) || '{}'); } catch(e){ notifSent = {}; }
+(function pruneSent(){
+  const today = new Date().toISOString().slice(0,10);
+  let changed = false;
+  for (const k of Object.keys(notifSent)) if (k.slice(0,10) < today){ delete notifSent[k]; changed = true; }
+  if (changed) try { localStorage.setItem(NKEY_SENT, JSON.stringify(notifSent)); } catch(e){}
+})();
 function saveNotifSet(){
   const v = document.getElementById('notifMin');
   if(v) notifMin = parseInt(v.value || '5', 10);
@@ -688,48 +826,93 @@ function urlBase64ToUint8Array(base64String){
   for (let i=0;i<raw.length;i++) out[i] = raw.charCodeAt(i);
   return out;
 }
+// Ключ отправителя. Пуши шлёт GitHub Actions (.github/workflows/push-reminders.yml),
+// а не воркер — у воркера никогда не было отправителя, поэтому пуши и не приходили.
+const VAPID_PUBLIC = 'BKzwddQMmCNRVSemZLt9l-_DDCYKfRHQzEQJEqZHu65qwkGuOxzFzGnwGwDbQEmv3CUPk5BHO4wGaOeaq35-8ro';
+
 function pushServer(){
   return 'https://sharaga-sync.sharaga.workers.dev';
 }
 function regSW(){
-  if (!('serviceWorker' in navigator)) return Promise.reject('nosw');
+  if (!('serviceWorker' in navigator)) return Promise.reject(new Error('nosw'));
   return navigator.serviceWorker.ready;
-}
-function getVapid(){
-  return cfFetch(pushServer() + '/api/vapid').then(d => d.publicKey);
 }
 function syncPushSettings(){
   if (!notifOn) return;
   fetch(pushServer() + '/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ min: notifMin }) }).catch(function(){});
 }
+function keyOf(sub){
+  try {
+    const raw = sub.options && sub.options.applicationServerKey;
+    if (!raw) return '';
+    const b = new Uint8Array(raw);
+    let bin = '';
+    for (let i=0;i<b.length;i++) bin += String.fromCharCode(b[i]);
+    return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,'');
+  } catch(e){ return ''; }
+}
+// Подписка на старый ключ бесполезна: отправитель подписывает новым и Apple
+// такой пуш отвергнет. Поэтому устаревшую подписку пересоздаём.
 function subscribePush(){
-  return getVapid().then(vapidKey => regSW().then(reg => reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(vapidKey)
-  }))).then(sub => fetch(pushServer() + '/api/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subscription: sub, min: notifMin }) }));
+  return regSW().then(function(reg){
+    return reg.pushManager.getSubscription().then(function(old){
+      if (old && keyOf(old) === VAPID_PUBLIC) return old;
+      const drop = old ? old.unsubscribe().catch(function(){}) : Promise.resolve();
+      return drop.then(function(){
+        return reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC)
+        });
+      });
+    });
+  }).then(function(sub){
+    return fetch(pushServer() + '/api/subscribe', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ subscription: sub.toJSON(), min: notifMin })
+    }).then(function(r){
+      if (!r.ok) throw new Error('http ' + r.status);
+      localStorage.setItem(NKEY_SUB, '1');
+      return sub;
+    });
+  });
 }
 function unsubscribePush(){
+  localStorage.removeItem(NKEY_SUB);
   if (!('serviceWorker' in navigator)) return Promise.resolve();
-  return navigator.serviceWorker.ready.then(reg => reg.pushManager.getSubscription()).then(sub => {
+  return navigator.serviceWorker.ready.then(function(reg){ return reg.pushManager.getSubscription(); }).then(function(sub){
     if (!sub) return;
     fetch(pushServer() + '/api/unsubscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(function(){});
     return sub.unsubscribe();
   });
 }
+function isStandalone(){
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
 function askNotifPerm(){
   const msg = document.getElementById('notifPerm');
   const finish = function(txt){ if(msg) msg.textContent = txt; };
-  if (!('Notification' in window)){ finish('Браузер не даёт системных уведомлений — будут напоминания внутри приложения.'); return; }
+  if (!('Notification' in window)){
+    finish('iPhone даёт уведомления только приложению с Главного экрана. Открой сайт в Safari → «Поделиться» → «На экран «Домой»», запусти уже оттуда и включи галочку снова.');
+    return;
+  }
+  if (!isStandalone() && /iPhone|iPad|iPod/.test(navigator.userAgent)){
+    finish('⚠ Ты открыл сайт в браузере. На iPhone пуши работают только из иконки на Главном экране: «Поделиться» → «На экран «Домой»».');
+    return;
+  }
   const doSubscribe = function(){
-    subscribePush().then(function(){ finish('Push-уведомления подключены ✔'); }, function(){ finish('Уведомления разрешены, но push недоступен (добавь приложение на Главный экран).'); });
+    finish('Подключаю push…');
+    subscribePush().then(
+      function(){ finish('Push-уведомления подключены ✔ Напомню за ' + notifMin + ' мин до пары, даже если приложение закрыто.'); },
+      function(e){ finish('⚠ Push не подключился: ' + errDetail(e) + '. Попробуй с другого Wi-Fi (адрес воркера бывает заблокирован у мобильных операторов), потом жми «Проверить всё» ниже.'); }
+    );
   };
-  if (Notification.permission === 'granted'){ finish('Уведомления разрешены ✔ подключаю push…'); doSubscribe(); }
+  if (Notification.permission === 'granted'){ doSubscribe(); }
   else if (Notification.permission === 'default'){
     Notification.requestPermission().then(function(p){
-      if (p === 'granted'){ finish('Уведомления разрешены ✔ подключаю push…'); doSubscribe(); }
-      else finish('Разрешение не дано — будут напоминания внутри приложения.');
+      if (p === 'granted'){ doSubscribe(); }
+      else finish('Разрешение не дано — будут только напоминания внутри открытого приложения.');
     });
-  } else finish('Уведомления запрещены в настройках — будут напоминания внутри приложения.');
+  } else finish('Уведомления запрещены в настройках iPhone: Настройки → Шарага → Уведомления → разрешить.');
 }
 function toggleNotif(){
   const cb = document.getElementById('notifOn');
@@ -799,6 +982,194 @@ function updateNotifClock(){
     cd.style.display = 'none';
   }
 }
+// ====== ДИАГНОСТИКА ======
+let diagText = '';
+const BR = String.fromCharCode(10);
+function diagLine(ok, name, detail){
+  return (ok === null ? '…' : ok ? '✅' : '❌') + ' ' + name + (detail ? ' — ' + detail : '');
+}
+// Пробник ждёт меньше, чем обычный запрос: смысл диагностики в том,
+// чтобы быстро показать, какой канал молчит, а не висеть 20 секунд на каждом.
+function probe(url, opts){
+  const t0 = Date.now();
+  opts = opts || {};
+  let ctrl = null, t = 0;
+  if (typeof AbortController !== 'undefined'){
+    ctrl = new AbortController();
+    opts.signal = ctrl.signal;
+    t = setTimeout(function(){ ctrl.abort(); }, 8000);
+  }
+  return fetch(url, opts).then(function(r){
+    if (t) clearTimeout(t);
+    if (!r.ok) throw new Error('http ' + r.status);
+    return { ok:true, ms: Date.now() - t0 };
+  }).catch(function(e){
+    if (t) clearTimeout(t);
+    return { ok:false, ms: Date.now() - t0, err: errDetail(e) };
+  });
+}
+function runDiag(){
+  const out = document.getElementById('diagOut');
+  const copyBtn = document.getElementById('diagCopy');
+  out.style.display = 'block';
+  copyBtn.style.display = 'block';
+  out.textContent = 'Проверяю…';
+
+  const lines = [];
+  const ua = navigator.userAgent;
+  const iOS = /iPhone|iPad|iPod/.test(ua);
+  const m = ua.match(/OS (\d+)[._](\d+)/);
+  const iosVer = m ? (m[1] + '.' + m[2]) : '?';
+
+  lines.push('— Устройство —');
+  lines.push(diagLine(true, 'Версия приложения', APP_VERSION));
+  lines.push(diagLine(true, iOS ? ('iOS ' + iosVer) : 'не iPhone', ua.slice(0, 60)));
+  lines.push(diagLine(isStandalone(), 'Запущено с Главного экрана',
+    isStandalone() ? 'да' : 'НЕТ — на iPhone без этого пуши не приходят'));
+  if (iOS && m && parseInt(m[1], 10) < 16){
+    lines.push(diagLine(false, 'iOS слишком старая', 'нужна 16.4 или новее'));
+  }
+
+  lines.push('');
+  lines.push('— Уведомления —');
+  lines.push(diagLine('Notification' in window, 'API уведомлений',
+    ('Notification' in window) ? 'есть' : 'нет (открой с Главного экрана)'));
+  lines.push(diagLine(
+    ('Notification' in window) && Notification.permission === 'granted',
+    'Разрешение',
+    ('Notification' in window) ? Notification.permission : '—'));
+  lines.push(diagLine('serviceWorker' in navigator, 'Service Worker', ('serviceWorker' in navigator) ? 'есть' : 'нет'));
+  lines.push(diagLine(notifOn, 'Галочка «Напоминать»', notifOn ? 'включена' : 'выключена'));
+
+  // Каждая строка «Связь» появляется, как только её проверка закончилась —
+  // иначе на телефоне с закрытым каналом экран молчит все 8 секунд.
+  const netSlots = [];
+  const render = function(){
+    const net = netSlots.map(function(x){ return x.text; });
+    const tail = [
+      '',
+      '— Данные —',
+      diagLine(true, 'Записей с ДЗ', String(Object.keys(pairData).length)),
+      diagLine(!hasPending(), 'Очередь на отправку', hasPending() ? 'есть неотправленное' : 'пусто'),
+      diagLine(true, 'Рабочий канал', localStorage.getItem(CHKEY) || 'ещё не определён'),
+      '',
+      new Date().toLocaleString('ru-RU')
+    ];
+    diagText = lines.concat(['', '— Связь —'], net, tail).join(BR);
+    out.textContent = diagText;
+  };
+  const slot = function(name, run){
+    const cell = { text: diagLine(null, name, 'проверяю…') };
+    netSlots.push(cell);
+    return run().then(function(text){ cell.text = text; render(); },
+                      function(e){ cell.text = diagLine(false, name, String(e && e.message || e)); render(); });
+  };
+
+  const jobs = [];
+
+  if ('serviceWorker' in navigator){
+    jobs.push(slot('Push-подписка', function(){
+      return navigator.serviceWorker.ready.then(function(reg){
+        return reg.pushManager.getSubscription().then(function(sub){
+          if (!sub) return diagLine(false, 'Push-подписка', 'НЕТ — включи галочку «Напоминать»');
+          const fresh = keyOf(sub) === VAPID_PUBLIC;
+          return diagLine(fresh, 'Push-подписка',
+            fresh ? ('есть, ключ актуальный (' + sub.endpoint.slice(0, 34) + '…)')
+                  : 'есть, но от СТАРОГО ключа — выключи и включи галочку «Напоминать»');
+        });
+      });
+    }));
+  }
+
+  jobs.push(slot('Сервер подписок (workers.dev)', function(){
+    return probe(pushServer() + '/api/vapid').then(function(r){
+      return diagLine(r.ok, 'Сервер подписок (workers.dev)',
+        r.ok ? (r.ms + ' мс') : (r.err + ' — вероятно, закрыт оператором'));
+    });
+  }));
+
+  jobs.push(slot('Облако: чтение', function(){
+    return probe(CLOUD_URL).then(function(r){
+      return diagLine(r.ok, 'Облако: чтение', r.ok ? (r.ms + ' мс') : r.err);
+    });
+  }));
+
+  // Проверка записи не должна ничего затирать: сперва читаем облако,
+  // потом пишем объединённое. Если прочитать не вышло — не пишем вовсе.
+  jobs.push(slot('Облако: запись (выгрузка ДЗ)', function(){
+    return cfFetch(CLOUD_URL).then(function(d){
+      const remote = (d && d.data && d.data.pairs) ? d.data.pairs : {};
+      const merged = Object.assign({}, remote, pairData);
+      const t0 = Date.now();
+      return cfFetch(CLOUD_URL, {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY},
+        body: JSON.stringify({ pairs: merged })
+      }).then(function(){
+        clearPending();
+        localStorage.setItem(CHKEY, 'воркер');
+        return diagLine(true, 'Облако: запись (выгрузка ДЗ)', (Date.now() - t0) + ' мс, задания заодно выгружены');
+      }, function(e){
+        return diagLine(false, 'Облако: запись (выгрузка ДЗ)', errDetail(e));
+      });
+    }, function(e){
+      return diagLine(false, 'Облако: запись (выгрузка ДЗ)', 'не проверял — не читается облако (' + errDetail(e) + ')');
+    });
+  }));
+
+  jobs.push(slot('Запасной канал crudcrud', function(){
+    return probe(CRTD_URL).then(function(r){
+      return diagLine(r.ok, 'Запасной канал crudcrud', r.ok ? (r.ms + ' мс') : r.err);
+    });
+  }));
+
+  jobs.push(slot('Зеркало на GitHub Pages', function(){
+    return probe(CLOUD_MIRROR).then(function(r){
+      return diagLine(r.ok, 'Зеркало на GitHub Pages', r.ok ? (r.ms + ' мс') : r.err);
+    });
+  }));
+
+  render();
+  Promise.all(jobs).then(render);
+}
+function copyDiag(){
+  if (!diagText) return;
+  const done = function(){ setStatus('Отчёт скопирован — вставь его ассистенту'); };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(diagText).then(done, function(){});
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = diagText; document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); done(); } catch(e){}
+    document.body.removeChild(ta);
+  }
+}
+function testLocalNotif(){
+  const msg = document.getElementById('notifPerm');
+  fireToast('🔔 Проверка', 'Так выглядит напоминание внутри приложения');
+  if (!('Notification' in window)){
+    if (msg) msg.textContent = 'Системных уведомлений нет — открой приложение с Главного экрана.';
+    return;
+  }
+  if (Notification.permission !== 'granted'){
+    if (msg) msg.textContent = 'Сначала разреши уведомления (галочка «Напоминать»).';
+    return;
+  }
+  regSW().then(function(reg){
+    reg.showNotification('✅ Шарага', {
+      body: 'Системные уведомления работают. Push о парах придёт даже с закрытым приложением.',
+      icon: 'assets/icon-192.png', badge: 'assets/icon-192.png', tag: 'sharaga-selftest'
+    });
+  }).catch(function(){
+    try { new Notification('✅ Шарага', { body: 'Системные уведомления работают.' }); } catch(e){}
+  });
+}
+
+(function showVersion(){
+  const el = document.getElementById('verTag');
+  if (el) el.textContent = APP_VERSION;
+})();
+
 (function initNotif(){
   const cb = document.getElementById('notifOn');
   if (cb) cb.checked = notifOn;
@@ -807,6 +1178,8 @@ function updateNotifClock(){
   if (notifOn) askNotifPerm();
   updateNotifClock();
   setInterval(updateNotifClock, 15000);
+  updatePendingBadge();
+  setTimeout(function(){ retryPending(true); }, 1500);
 })();
 </script>
 </body>

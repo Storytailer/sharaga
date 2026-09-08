@@ -1,4 +1,4 @@
-const CACHE = 'sharaga-v8';
+const CACHE = 'sharaga-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -16,9 +16,36 @@ self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 
+self.addEventListener('message', e => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+function isAppShell(req){
+  if (req.mode === 'navigate') return true;
+  const u = new URL(req.url);
+  return u.pathname.endsWith('/') || u.pathname.endsWith('index.html') || u.pathname.endsWith('manifest.webmanifest');
+}
+
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   if (e.request.url.indexOf('/cloud/') > -1) { e.respondWith(fetch(e.request)); return; }
+
+  // Само приложение — сначала сеть: иначе обновление доезжает только со второго
+  // запуска, и «скачал новую версию» на телефоне показывает старую.
+  if (isAppShell(e.request)) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.status === 200) {
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(e.request, copy));
+        }
+        return res;
+      }).catch(() => caches.match(e.request).then(c => c || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Картинки и прочая статика — сначала кэш (они не меняются).
   e.respondWith(
     caches.match(e.request).then(cached => {
       const fetchP = fetch(e.request).then(res => {
@@ -46,6 +73,7 @@ self.addEventListener('push', e => {
       icon: 'assets/icon-192.png',
       badge: 'assets/icon-192.png',
       tag: data && data.tag ? data.tag : 'sharaga-pair',
+      renotify: true,
       data: data || {}
     })
   );

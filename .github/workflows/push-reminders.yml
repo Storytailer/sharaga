@@ -1,0 +1,70 @@
+name: Push-напоминания о парах
+
+on:
+  schedule:
+    # каждые 5 минут; GitHub может задерживать запуск на несколько минут,
+    # поэтому в скрипте есть запас GRACE_MIN
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+    inputs:
+      test:
+        description: 'Отправить тестовое уведомление прямо сейчас'
+        type: boolean
+        default: false
+
+concurrency:
+  group: push-reminders
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Установить web-push
+        run: npm install --no-save --no-audit --no-fund web-push@3
+
+      - name: Забрать состояние отправок
+        run: |
+          git fetch origin push-state --depth=1 2>/dev/null \
+            && git show origin/push-state:sent.json > sent.json 2>/dev/null \
+            || echo '{}' > sent.json
+          echo "Состояние: $(wc -c < sent.json) байт"
+
+      - name: Отправить напоминания
+        env:
+          VAPID_PUBLIC: ${{ secrets.VAPID_PUBLIC }}
+          VAPID_PRIVATE: ${{ secrets.VAPID_PRIVATE }}
+          SYNC_KEY: ${{ secrets.SYNC_KEY }}
+          WORKER_URL: https://sharaga-sync.sharaga.workers.dev
+          TZ_OFFSET_MIN: '180'
+          LEAD_MIN: '10'
+          GRACE_MIN: '9'
+          FORCE_TEST: ${{ inputs.test && '1' || '0' }}
+        run: node .github/scripts/send-reminders.js
+
+      - name: Сохранить состояние отправок
+        if: ${{ !cancelled() }}
+        run: |
+          if git show origin/push-state:sent.json 2>/dev/null | diff -q - sent.json >/dev/null 2>&1; then
+            echo "Состояние не изменилось — коммит не нужен."
+            exit 0
+          fi
+          tmp=$(mktemp -d)
+          cp sent.json "$tmp/sent.json"
+          cd "$tmp"
+          git init -q -b push-state
+          git config user.name "sharaga-bot"
+          git config user.email "sharaga-bot@users.noreply.github.com"
+          git add sent.json
+          git commit -q -m "состояние отправок $(date -u +%F\ %T)Z"
+          git push -q --force "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" push-state
+          echo "Состояние сохранено."
