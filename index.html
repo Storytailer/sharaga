@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Шарага — органайзер (Б-ОРМ-41)</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f6fb5">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Шарага">
+<link rel="apple-touch-icon" href="assets/icon.png">
+<style>
+  :root{
+    --r:16px;
+    --blue:#1f6fb5;       /* синий акцент */
+    --blue-d:#154f86;     /* тёмный синий */
+    --blue-ld:#e3edf7;
+    --bg:#f2f6fb;         /* светлый фон */
+    --card:#ffffff;       /* карточка */
+    --card2:#e7eff8;      /* вторичная карточка/кнопка */
+    --line:#d3e0ee;       /* границы */
+    --ink:#1b2733;        /* тёмный текст */
+    --mut:#6c7b8a;        /* приглушённый */
+    --ok:#2e8b5d;         /* зелёный готово */
+    --okl:#e2f3ea;
+    --oktxt:#23513a;
+    --shadow:0 2px 8px rgba(20,40,60,.06);
+    --shadowup:0 6px 16px rgba(20,40,60,.12);
+    --overlay:rgba(20,35,50,.45);
+  }
+  html.dark{
+    --bg:#141b24;
+    --card:#1d2833;
+    --card2:#273544;
+    --line:#38506a;
+    --ink:#e3edf6;
+    --mut:#9fb0c2;
+    --ok:#4cbf84;
+    --okl:#1d3a2c;
+    --oktxt:#9ce0bb;
+    --blue:#4a9de0;
+    --blue-d:#7fc0f0;
+    --blue-ld:#20344a;
+    --shadow:0 2px 10px rgba(0,0,0,.35);
+    --shadowup:0 8px 22px rgba(0,0,0,.45);
+    --overlay:rgba(0,0,0,.6);
+  }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { margin:0; }
+  body { font-family:-apple-system,"Segoe UI",Roboto,sans-serif; background:var(--bg); color:var(--ink); padding-bottom:70px; transition:background .25s,color .25s; }
+
+  /* ШАПКА */
+  .top { position:sticky; top:0; z-index:20; background:var(--bg); padding:14px 16px 10px; transition:background .25s; }
+  .brand { display:flex; align-items:center; gap:11px; }
+  .logo { width:50px; height:50px; border-radius:12px; background:#fff; border:1px solid var(--line); padding:5px; object-fit:contain; box-shadow:0 3px 10px rgba(30,45,20,.14); flex:0 0 auto; }
+  .brand .tt { line-height:1.15; flex:1; }
+  .brand h1 { margin:0; font-size:22px; font-weight:800; letter-spacing:-.4px; }
+  .brand .in { font-size:11.5px; color:var(--mut); font-weight:600; letter-spacing:.2px; }
+  .themeBtn { width:42px; height:42px; border:none; border-radius:13px; background:var(--card2); color:var(--ink); font-size:19px; cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; transition:background .25s; }
+
+  nav { display:flex; gap:8px; margin-top:12px; }
+  nav button { flex:1; border:none; background:var(--card2); color:var(--mut); border-radius:12px; padding:10px 0; font-size:14px; font-weight:700; cursor:pointer; transition:background .25s,color .25s; }
+  nav button.active { background:var(--blue); color:#fff; box-shadow:0 3px 10px rgba(31,111,181,.3); }
+
+  .container { max-width:560px; margin:0 auto; padding:4px 16px 40px; }
+
+  /* СЕГОДНЯ */
+  .today { background:linear-gradient(135deg,var(--blue-d),var(--blue)); color:#fff; border-radius:20px; padding:18px 18px 6px; box-shadow:0 8px 22px rgba(21,79,134,.3); margin:8px 0 16px; }
+  .today .lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; opacity:.85; }
+  .today .dt { font-size:27px; font-weight:800; margin:2px 0 4px; }
+  .today .sub { font-size:13px; opacity:.92; margin-bottom:14px; }
+  .today .pair { background:rgba(255,255,255,.97); border-left-color:var(--blue-d); }
+  html.dark .today .pair { background:#fff; }
+  .today .pair .tm { color:var(--blue-d); }
+  .today .pair .ds { color:#3a2a20; }
+  .today .pair .meta { color:#8a7563; }
+  .today .pair .room { color:var(--blue); }
+
+  .weeknav { display:flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:8px 10px; box-shadow:var(--shadow); margin:0 0 12px; }
+  .weeknav .wn { width:38px; height:38px; border:none; border-radius:11px; background:var(--card2); color:var(--ink); font-size:20px; cursor:pointer; flex:0 0 auto; }
+  .weeknav .wnmid { flex:1; text-align:center; }
+  .weeknav .wnlbl { font-size:14px; font-weight:800; color:var(--ink); }
+  .weeknav .wntoday { border:none; background:none; color:var(--blue); font-weight:700; font-size:12.5px; cursor:pointer; margin-top:2px; }
+
+  .dow { display:flex; gap:8px; margin:14px 0 16px; overflow-x:auto; padding-bottom:4px; }
+  .dow button { flex:0 0 auto; background:var(--card2); border:1.5px solid transparent; border-radius:14px; padding:9px 8px; min-width:56px; text-align:center; font-size:11px; color:var(--mut); cursor:pointer; transition:background .25s; }
+  .dow button .wd { display:block; font-size:13px; font-weight:800; color:var(--ink); }
+  .dow button small { color:var(--mut); }
+  .dow button.active { background:var(--blue); color:#fff; box-shadow:0 3px 10px rgba(31,111,181,.3); }
+  .dow button.active .wd { color:#fff; }
+  .dow button.active small { color:#f3ded2; }
+  .dow button.today { border-color:var(--blue); }
+
+  /* КАРТОЧКИ ПАР */
+  .dayhead { font-size:16px; font-weight:800; color:var(--blue-d); margin:2px 0 10px; }
+  .pair { background:var(--card); border:1px solid var(--line); border-left:5px solid var(--blue); border-radius:14px; padding:13px 15px; margin:10px 0; box-shadow:var(--shadow); position:relative; cursor:pointer; transition:transform .12s,box-shadow .25s,background .25s; }
+  .pair:hover { transform:translateY(-1px); box-shadow:var(--shadowup); }
+  .pair .tm { font-size:12.5px; font-weight:700; color:var(--blue-d); letter-spacing:.2px; }
+  .pair .ds { font-size:15px; font-weight:700; margin:2px 0 3px; padding-right:74px; line-height:1.3; }
+  .pair .meta { font-size:12px; color:var(--mut); }
+  .pair .room { color:var(--blue); font-weight:700; }
+  .pair .badge { position:absolute; top:12px; right:12px; font-size:11px; font-weight:800; border-radius:10px; padding:3px 9px; }
+  .pair .badge.dz { background:#fdeccf; color:#a8721b; }
+  .pair .badge.done { background:var(--okl); color:var(--ok); }
+  .empty { color:var(--mut); font-size:14px; text-align:center; padding:30px 0; }
+
+  /* МОДАЛКА */
+  .overlay { position:fixed; inset:0; background:var(--overlay); display:none; align-items:flex-end; justify-content:center; z-index:100; }
+  .overlay.open { display:flex; }
+  .sheet { background:var(--bg); width:100%; max-width:560px; border-radius:22px 22px 0 0; padding:10px 18px 28px; max-height:92vh; overflow-y:auto; transition:background .25s; }
+  @keyframes up { from{transform:translateY(50px);opacity:0;} to{transform:none;opacity:1;} }
+  .sheet { animation:up .22s ease; }
+  .grab { width:44px; height:5px; background:var(--line); border-radius:3px; margin:4px auto 14px; }
+  .sheadbg { background:linear-gradient(135deg,var(--blue-d),var(--blue)); border-radius:18px; padding:17px; color:#fff; box-shadow:0 5px 14px rgba(21,79,134,.3); }
+  .sheadbg .stitle { font-size:17px; font-weight:800; margin:0 0 3px; line-height:1.28; }
+  .sheadbg .smeta { font-size:13px; opacity:.92; }
+  .sheadbg .stitle .typ { font-size:10.5px; background:rgba(255,255,255,.22); border-radius:8px; padding:2px 8px; margin-left:6px; vertical-align:middle; font-weight:700; }
+  .field .flabel { font-size:12px; font-weight:800; color:var(--blue-d); text-transform:uppercase; letter-spacing:.5px; margin:16px 0 7px; display:flex; align-items:center; gap:6px; }
+  .field textarea { width:100%; border:1.5px solid var(--line); background:var(--card); border-radius:13px; padding:12px; font-size:14.5px; min-height:72px; resize:vertical; font-family:inherit; color:var(--ink); transition:background .25s,border-color .25s; }
+  .field textarea:focus { outline:none; border-color:var(--blue); }
+  .btn { background:var(--blue); color:#fff; border:none; border-radius:13px; padding:12px; font-size:14.5px; font-weight:700; cursor:pointer; width:100%; margin-top:10px; box-shadow:0 3px 10px rgba(31,111,181,.25); }
+  .btn.sec { background:var(--card2); color:var(--blue-d); box-shadow:none; transition:background .25s; }
+  .btn.donebtn { background:var(--ok); box-shadow:0 3px 10px rgba(46,139,93,.25); }
+  .readybox { background:var(--okl); border:1.5px dashed var(--ok); border-radius:13px; padding:13px; margin-top:10px; transition:background .25s; }
+  .readybox .clabel { font-size:11.5px; font-weight:800; color:var(--ok); text-transform:uppercase; letter-spacing:.5px; }
+  .readybox .rtext { white-space:pre-wrap; font-size:14px; margin-top:7px; color:var(--oktxt); }
+  .closebtn { position:sticky; bottom:0; background:var(--card2); color:var(--blue-d); box-shadow:none; margin-top:16px; }
+
+  .syncbox { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; box-shadow:var(--shadow); margin-top:14px; }
+  .syncbox .flabel { font-size:12px; font-weight:800; color:var(--blue-d); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+  .synote { font-size:13px; color:var(--mut); line-height:1.45; margin:0 0 6px; }
+  .synote b { color:var(--ink); }
+  .filehint { margin-top:14px; padding-top:12px; border-top:1px dashed var(--line); }
+  .filehint .flabel { font-size:11px; color:var(--mut); }
+
+  .setrow { display:flex; align-items:center; gap:10px; padding:10px 2px; font-size:14px; color:var(--ink); font-weight:600; }
+  .setrow input[type=checkbox] { width:20px; height:20px; accent-color:var(--blue); flex:0 0 auto; }
+  .setrow-sub { justify-content:space-between; color:var(--mut); font-size:13px; font-weight:600; }
+  .setrow-sub select { border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:8px 10px; font-size:14px; font-weight:700; }
+
+  .cd { background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.25); border-radius:14px; padding:11px 14px; font-size:15px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+  .cd .cdt { color:#fff; }
+  .cd .cdp { font-size:12.5px; color:#f3ded2; }
+  .today .pair { margin-bottom:16px; }
+
+  .toast { position:fixed; left:16px; right:16px; bottom:84px; z-index:300; background:var(--card); border:1.5px solid var(--blue); border-radius:16px; padding:14px 16px; box-shadow:var(--shadowup); display:none; cursor:pointer; }
+  .toast.show { display:block; animation:up .25s ease; }
+  .toast .toast-t { font-size:15px; font-weight:800; color:var(--blue-d); }
+  .toast .toast-s { font-size:13px; color:var(--mut); margin-top:4px; }
+
+  .footer { max-width:560px; margin:0 auto; padding:6px 16px 30px; color:var(--mut); font-size:12px; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">
+    <img class="logo" src="assets/logo.png" alt="КГУ">
+    <div class="tt">
+      <h1>Шарага</h1>
+      <div class="in">КГУ · Б-ОРМ-41 · пар и заданий</div>
+    </div>
+    <button class="themeBtn" id="themeBtn" onclick="toggleTheme()" title="Сменить тему">🌙</button>
+  </div>
+  <nav>
+    <button id="ntab" class="active" onclick="showTab('schedule')">Расписание</button>
+    <button id="dtab" onclick="showTab('subjects')">Задания</button>
+  </nav>
+</div>
+
+<div id="view-schedule" class="container">
+  <div class="today">
+    <div class="lbl">Сегодня</div>
+    <div class="dt" id="todayDate"></div>
+    <div class="sub" id="todaySub">нажми на пару, чтобы открыть задание</div>
+    <div class="cd" id="todayCountdown" style="display:none"></div>
+    <div id="todayPairs"></div>
+  </div>
+
+  <div class="weeknav">
+    <button class="wn" onclick="shiftWeek(-7)">‹</button>
+    <div class="wnmid">
+      <div class="wnlbl" id="weekLabel"></div>
+      <button class="wntoday" onclick="goToday()">Сегодня</button>
+    </div>
+    <button class="wn" onclick="shiftWeek(7)">›</button>
+  </div>
+
+  <div class="dow" id="dowTabs"></div>
+  <div id="dayPairs"></div>
+</div>
+
+<div id="view-subjects" class="container" style="display:none">
+  <p class="empty">Задания вносятся прямо у каждой пары — нажми на пару в «Расписании».<br><br>Открой пару: сверху запиши ДЗ, снизу прикрепи готовое.</p>
+
+  <div class="syncbox">
+    <div class="flabel">Облачная синхронизация</div>
+    <p class="synote">Запиши ДЗ у пар, нажми <b>«⬆ В облако»</b> — ассистент получит задания. Когда он подготовит готовые и зальёт их в облако, нажми <b>«⬇ Из облака»</b> — готовые появятся у пар.</p>
+    <button class="btn" onclick="syncUp()">⬆ В облако (отправить ДЗ)</button>
+    <button class="btn sec" onclick="syncDown()">⬇ Из облака (получить готовое)</button>
+    <p class="synote" id="syncStatus" style="margin-top:10px"></p>
+    <div class="filehint">
+      <div class="flabel">Файл домашка.json (запасной вариант)</div>
+      <button class="btn sec" onclick="exportJSON()">⬇ Экспорт файл</button>
+      <button class="btn sec" onclick="document.getElementById('importFile').click()">⬆ Импорт файл</button>
+      <input type="file" id="importFile" accept=".json,application/json" style="display:none" onchange="importJSON(event)">
+    </div>
+  </div>
+
+  <div class="syncbox">
+    <div class="flabel">🔔 Напоминания о парах</div>
+    <label class="setrow">
+      <input type="checkbox" id="notifOn" onchange="toggleNotif()">
+      <span>Напоминать о начале пары</span>
+    </label>
+    <div class="setrow setrow-sub">
+      <span>За сколько напомнить</span>
+      <select id="notifMin" onchange="saveNotifSet()">
+        <option value="5">за 5 мин</option>
+        <option value="10">за 10 мин</option>
+        <option value="15">за 15 мин</option>
+        <option value="20">за 20 мин</option>
+        <option value="0">в самое начало</option>
+      </select>
+    </div>
+    <p class="synote" id="notifPerm" style="margin-top:6px"></p>
+  </div>
+</div>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeSheet(event)">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="grab"></div>
+    <div class="sheadbg">
+      <h2 class="stitle" id="sTitle"></h2>
+      <div class="smeta" id="sMeta"></div>
+    </div>
+
+    <div class="field">
+      <div class="flabel">📝 Задание (ДЗ)</div>
+      <textarea id="dzText" placeholder="Напиши, что задали на эту пару…"></textarea>
+    </div>
+    <button class="btn sec" onclick="saveDZ()">Сохранить задание</button>
+
+    <div class="field">
+      <div class="flabel">✅ Готовое решение</div>
+      <div class="readybox" id="readyBox" style="display:none">
+        <div class="clabel">Готовое прикреплено</div>
+        <div class="rtext" id="readyText"></div>
+      </div>
+      <button class="btn donebtn" id="readyBtn" onclick="attachReady()">
+        <span id="readyBtnTxt">＋ Прикрепить готовое</span>
+      </button>
+    </div>
+
+    <button class="btn closebtn" onclick="closeSheet()">Закрыть</button>
+  </div>
+</div>
+
+<div class="footer">Шарага · данные сохраняются на устройстве · календарь Б-ОРМ-41 (сен–окт 2026)</div>
+
+<script>
+// ====== ТЕМА ======
+const TKEY = 'sharaga_theme';
+function applyTheme(dark){
+  document.documentElement.classList.toggle('dark', dark);
+  document.getElementById('themeBtn').textContent = dark ? '☀️' : '🌙';
+  localStorage.setItem(TKEY, dark ? 'dark' : 'light');
+}
+function toggleTheme(){ applyTheme(!document.documentElement.classList.contains('dark')); }
+if (localStorage.getItem(TKEY) === 'dark'){ document.documentElement.classList.add('dark'); document.getElementById('themeBtn').textContent = '☀️'; }
+if ('serviceWorker' in navigator){ window.addEventListener('load', function(){ navigator.serviceWorker.register('./sw.js').catch(function(){}); }); }
+</script>
+
+<script>
+const PAIRS = [
+ {"d":"2026-09-02","t":"14:10 - 15:45","ds":"Организация культурно-массовых мероприятий для молодежи","tp":"Пр","rm":"к. 1/303","st":"Садовникова Ю.М."},
+ {"d":"2026-09-02","t":"15:55 - 17:30","ds":"Проектирование в профессиональной деятельности","tp":"КрП","rm":"к. 1/708","st":"Познякова К.Н."},
+ {"d":"2026-09-02","t":"17:40 - 19:15","ds":"Социология молодежи","tp":"Лек","rm":"к. 1/205","st":"Максимов М.А."},
+ {"d":"2026-09-03","t":"10:25 - 12:00","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/204","st":"Иванова И.В."},
+ {"d":"2026-09-03","t":"12:20 - 13:55","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Пр","rm":"к. 1/210","st":"Портнова О.А."},
+ {"d":"2026-09-03","t":"14:10 - 15:45","ds":"Социология молодежи","tp":"Пр","rm":"к. 1/305","st":"Максимов М.А."},
+ {"d":"2026-09-04","t":"12:20 - 13:55","ds":"Практикум по социальному проектированию","tp":"Инд","rm":"к. 1/211","st":"Иванова И.В."},
+ {"d":"2026-09-04","t":"14:10 - 15:45","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Пр","rm":"к. 1/910","st":"Познякова К.Н."},
+ {"d":"2026-09-04","t":"15:55 - 17:30","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Инд","rm":"к. 1/904","st":"Портнова О.А."},
+ {"d":"2026-09-07","t":"08:30 - 10:05","ds":"Проектирование в профессиональной деятельности","tp":"КрП","rm":"к. 1/705","st":"Познякова К.Н."},
+ {"d":"2026-09-07","t":"10:25 - 12:00","ds":"Организация культурно-массовых мероприятий для молодежи","tp":"Пр","rm":"к. 1/210","st":"Садовникова Ю.М."},
+ {"d":"2026-09-08","t":"08:30 - 10:05","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Инд","rm":"к. 1/211","st":"Познякова К.Н."},
+ {"d":"2026-09-08","t":"10:25 - 12:00","ds":"Практикум проектирования культурно-массовой работы в молодежной среде","tp":"Пр","rm":"к. 1/210","st":"Садовникова Ю.М."},
+ {"d":"2026-09-08","t":"12:20 - 13:55","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/210","st":"Иванова И.В."},
+ {"d":"2026-09-09","t":"08:30 - 10:05","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Пр","rm":"к. 1/211","st":"Познякова К.Н."},
+ {"d":"2026-09-09","t":"10:25 - 12:00","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/204","st":"Иванова И.В."},
+ {"d":"2026-09-09","t":"12:20 - 13:55","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Инд","rm":"к. 1/210","st":"Портнова О.А."},
+ {"d":"2026-09-10","t":"12:20 - 13:55","ds":"Социология","tp":"Инд","rm":"к. 1/705","st":"Максимов М.А."},
+ {"d":"2026-09-10","t":"14:10 - 15:45","ds":"Практикум проектирования культурно-массовой работы в молодежной среде","tp":"Инд","rm":"к. 1/310","st":"Садовникова Ю.М."},
+ {"d":"2026-09-11","t":"08:30 - 10:05","ds":"Практикум по социальному проектированию","tp":"Инд","rm":"к. 1/309","st":"Иванова И.В."},
+ {"d":"2026-09-11","t":"10:25 - 12:00","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Пр","rm":"к. 1/204","st":"Портнова О.А."},
+ {"d":"2026-09-14","t":"14:10 - 15:45","ds":"Проектирование в профессиональной деятельности","tp":"КрП","rm":"к. 1/704","st":"Познякова К.Н."},
+ {"d":"2026-09-14","t":"15:55 - 17:30","ds":"Социология","tp":"Лек","rm":"к. 1/204","st":"Максимов М.А."},
+ {"d":"2026-09-14","t":"17:40 - 19:15","ds":"Социология","tp":"Пр","rm":"к. 1/204","st":"Максимов М.А."},
+ {"d":"2026-09-15","t":"10:25 - 12:00","ds":"Практикум проектирования культурно-массовой работы в молодежной среде","tp":"Пр","rm":"к. 1/705","st":"Садовникова Ю.М."},
+ {"d":"2026-09-15","t":"12:20 - 13:55","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/210","st":"Иванова И.В."},
+ {"d":"2026-09-15","t":"14:10 - 15:45","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Лек","rm":"к. 1/704","st":"Познякова К.Н."},
+ {"d":"2026-09-16","t":"14:10 - 15:45","ds":"Организация культурно-массовых мероприятий для молодежи","tp":"Пр","rm":"к. 1/303","st":"Садовникова Ю.М."},
+ {"d":"2026-09-16","t":"15:55 - 17:30","ds":"Проектирование в профессиональной деятельности","tp":"КрП","rm":"к. 1/708","st":"Познякова К.Н."},
+ {"d":"2026-09-16","t":"17:40 - 19:15","ds":"Социология молодежи","tp":"Лек","rm":"к. 1/205","st":"Максимов М.А."},
+ {"d":"2026-09-17","t":"10:25 - 12:00","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/204","st":"Иванова И.В."},
+ {"d":"2026-09-17","t":"12:20 - 13:55","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Пр","rm":"к. 1/210","st":"Портнова О.А."},
+ {"d":"2026-09-17","t":"14:10 - 15:45","ds":"Социология молодежи","tp":"Пр","rm":"к. 1/305","st":"Максимов М.А."},
+ {"d":"2026-09-18","t":"12:20 - 13:55","ds":"Практикум по социальному проектированию","tp":"Инд","rm":"к. 1/211","st":"Иванова И.В."},
+ {"d":"2026-09-18","t":"14:10 - 15:45","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Пр","rm":"к. 1/910","st":"Познякова К.Н."},
+ {"d":"2026-09-18","t":"15:55 - 17:30","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Инд","rm":"к. 1/904","st":"Портнова О.А."},
+ {"d":"2026-09-21","t":"08:30 - 10:05","ds":"Проектирование в профессиональной деятельности","tp":"КрП","rm":"к. 1/705","st":"Познякова К.Н."},
+ {"d":"2026-09-21","t":"10:25 - 12:00","ds":"Организация культурно-массовых мероприятий для молодежи","tp":"Пр","rm":"к. 1/210","st":"Садовникова Ю.М."},
+ {"d":"2026-09-22","t":"08:30 - 10:05","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Инд","rm":"к. 1/211","st":"Познякова К.Н."},
+ {"d":"2026-09-22","t":"10:25 - 12:00","ds":"Практикум проектирования культурно-массовой работы в молодежной среде","tp":"Пр","rm":"к. 1/210","st":"Садовникова Ю.М."},
+ {"d":"2026-09-22","t":"12:20 - 13:55","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/210","st":"Иванова И.В."},
+ {"d":"2026-09-23","t":"08:30 - 10:05","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Пр","rm":"к. 1/211","st":"Познякова К.Н."},
+ {"d":"2026-09-23","t":"10:25 - 12:00","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/204","st":"Иванова И.В."},
+ {"d":"2026-09-23","t":"12:20 - 13:55","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Инд","rm":"к. 1/210","st":"Портнова О.А."},
+ {"d":"2026-09-24","t":"12:20 - 13:55","ds":"Социология","tp":"Инд","rm":"к. 1/705","st":"Максимов М.А."},
+ {"d":"2026-09-24","t":"14:10 - 15:45","ds":"Практикум проектирования культурно-массовой работы в молодежной среде","tp":"Инд","rm":"к. 1/310","st":"Садовникова Ю.М."},
+ {"d":"2026-09-25","t":"08:30 - 10:05","ds":"Практикум по социальному проектированию","tp":"Инд","rm":"к. 1/309","st":"Иванова И.В."},
+ {"d":"2026-09-25","t":"10:25 - 12:00","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Пр","rm":"к. 1/204","st":"Портнова О.А."},
+ {"d":"2026-09-28","t":"14:10 - 15:45","ds":"Проектирование в профессиональной деятельности","tp":"КрП","rm":"к. 1/704","st":"Познякова К.Н."},
+ {"d":"2026-09-28","t":"15:55 - 17:30","ds":"Социология","tp":"Лек","rm":"к. 1/204","st":"Максимов М.А."},
+ {"d":"2026-09-28","t":"17:40 - 19:15","ds":"Социология","tp":"Пр","rm":"к. 1/204","st":"Максимов М.А."},
+ {"d":"2026-09-29","t":"10:25 - 12:00","ds":"Практикум проектирования культурно-массовой работы в молодежной среде","tp":"Пр","rm":"к. 1/705","st":"Садовникова Ю.М."},
+ {"d":"2026-09-29","t":"12:20 - 13:55","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/210","st":"Иванова И.В."},
+ {"d":"2026-09-29","t":"14:10 - 15:45","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Лек","rm":"к. 1/704","st":"Познякова К.Н."},
+ {"d":"2026-09-30","t":"14:10 - 15:45","ds":"Организация культурно-массовых мероприятий для молодежи","tp":"Пр","rm":"к. 1/303","st":"Садовникова Ю.М."},
+ {"d":"2026-09-30","t":"15:55 - 17:30","ds":"Проектирование в профессиональной деятельности","tp":"КрП","rm":"к. 1/708","st":"Познякова К.Н."},
+ {"d":"2026-09-30","t":"17:40 - 19:15","ds":"Социология молодежи","tp":"Лек","rm":"к. 1/205","st":"Максимов М.А."},
+ {"d":"2026-10-01","t":"10:25 - 12:00","ds":"Практикум по социальному проектированию","tp":"Пр","rm":"к. 1/204","st":"Иванова И.В."},
+ {"d":"2026-10-01","t":"12:20 - 13:55","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Пр","rm":"к. 1/210","st":"Портнова О.А."},
+ {"d":"2026-10-01","t":"14:10 - 15:45","ds":"Социология молодежи","tp":"Пр","rm":"к. 1/305","st":"Максимов М.А."},
+ {"d":"2026-10-02","t":"12:20 - 13:55","ds":"Практикум по социальному проектированию","tp":"Инд","rm":"к. 1/211","st":"Иванова И.В."},
+ {"d":"2026-10-02","t":"14:10 - 15:45","ds":"Руководство деятельностью детско-подростковых и молодёжных организаций и объединений","tp":"Пр","rm":"к. 1/910","st":"Познякова К.Н."},
+ {"d":"2026-10-02","t":"15:55 - 17:30","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Инд","rm":"к. 1/904","st":"Портнова О.А."},
+ {"d":"2026-10-05","t":"14:10 - 15:45","ds":"Проектирование в профессиональной деятельности","tp":"КрП","rm":"к. 1/704","st":"Познякова К.Н."},
+ {"d":"2026-10-05","t":"15:55 - 17:30","ds":"Социология","tp":"Лек","rm":"к. 1/204","st":"Максимов М.А."},
+ {"d":"2026-10-05","t":"17:40 - 19:15","ds":"Социология","tp":"Пр","rm":"к. 1/204","st":"Максимов М.А."}
+];
+
+const DKEY = 'uchenba_pairdata_v2';
+let pairData = {};
+try { pairData = JSON.parse(localStorage.getItem(DKEY) || '{}'); } catch(e){ pairData = {}; }
+// Данные теперь хранятся по одному на предмет (ds), а не по дате|времени.
+// Так «✎ ДЗ»/«✔ готово» не дублируется на каждый день, когда идёт пара.
+function subjKey(p){ return p.ds; }
+function savePairs(){ localStorage.setItem(DKEY, JSON.stringify(pairData)); }
+function startOf(p){ return new Date(p.d + 'T' + p.t.split(' - ')[0] + ':00').getTime(); }
+// Перенос старого формата (дата|время) в новый (по предмету): берём последнюю
+// запись по каждому полю, чтобы у предмета осталось одно ДЗ и одно готовое.
+function migratePairData(){
+  const out = {};
+  let changed = false;
+  for (const k in pairData){
+    const rec = pairData[k];
+    if (!rec || typeof rec !== 'object'){ changed = true; continue; }
+    if (k.indexOf('|') >= 0){
+      const parts = k.split('|');
+      const p = PAIRS.find(function(x){ return x.d===parts[0] && x.t===parts[1]; });
+      if (p){
+        const cur = out[p.ds] || {};
+        if (rec.dz && rec.dz.trim()) cur.dz = rec.dz;
+        if (rec.ready && rec.ready.trim()) cur.ready = rec.ready;
+        out[p.ds] = cur;
+      }
+      changed = true;
+    } else {
+      out[k] = rec;
+    }
+  }
+  if (changed){ pairData = out; savePairs(); }
+}
+migratePairData();
+
+// ====== ОБЛАКО (Cloudflare) ======
+const CLOUD_URL = 'https://sharaga-sync.sharaga.workers.dev/api/data';
+const CLOUD_KEY = 'sharaga-sync-2026';
+function cfFetch(url, opts){
+  let ctrl = null, t = 0;
+  if (typeof AbortController !== 'undefined'){ ctrl = new AbortController(); t = setTimeout(function(){ ctrl.abort(); }, 20000); }
+  opts = opts || {};
+  if (ctrl) opts.signal = ctrl.signal;
+  return fetch(url, opts).then(function(r){
+    if (t) clearTimeout(t);
+    if (!r.ok) throw new Error('http ' + r.status);
+    return r.json().catch(function(){ throw new Error('bad-json'); });
+  });
+}
+function syncUp(){
+  setStatus('Отправляю в облако…');
+  cfFetch(CLOUD_URL, {method:'POST', headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY}, body:JSON.stringify({pairs:pairData})})
+    .then(function(d){ setStatus(d.ok ? 'Отправлено ✔ ассистент получил задания' : 'Ошибка: '+(d.error||'нет ответа')); })
+    .catch(function(){ setStatus('⚠ Ошибка сети — проверь интернет. Иногда закрывают доступ к *.workers.dev (антивирус/VPN/сеть); данные при этом никуда не исчезнут — нажми «⬇ Экспорт файл», чтобы сохранить копию.'); });
+}
+function syncDown(){
+  setStatus('Загружаю из облака…');
+  cfFetch(CLOUD_URL)
+    .then(function(d){
+      if(d.ok && d.data && d.data.pairs){
+        pairData = Object.assign({}, d.data.pairs || {});
+        savePairs(); renderLists();
+        setStatus('Готово ✔ данные из облака загружены');
+      } else { setStatus('⚠ Не удалось загрузить из облака'); }
+    })
+    .catch(function(){ setStatus('⚠ Ошибка сети — проверь интернет.'); });
+}
+function autoCloud(){
+  cfFetch(CLOUD_URL)
+    .then(function(d){
+      if(d.ok && d.data && Object.keys(d.data.pairs||{}).length){
+        pairData = Object.assign({}, pairData, d.data.pairs);
+        savePairs(); renderLists();
+      }
+    })
+    .catch(function(){});
+}
+
+const MONTH = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const WD = ['вс','пн','вт','ср','чт','пт','сб'];
+function toISO(date){ return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0'); }
+
+function pairsOf(dateStr){ return (PAIRS.filter(p=>p.d===dateStr)).sort((a,b)=>a.t.localeCompare(b.t)); }
+function isShownPair(p){
+  const rec = pairData[subjKey(p)];
+  if (!rec) return false;
+  if ((!rec.dz || !rec.dz.trim()) && (!rec.ready || !rec.ready.trim())) return false;
+  const now = Date.now();
+  const list = PAIRS.filter(function(x){ return x.ds === p.ds; }).sort(function(a,b){ return startOf(a)-startOf(b); });
+  for (let i=0;i<list.length;i++){
+    if (startOf(list[i]) >= now) return list[i].d === p.d && list[i].t === p.t;
+  }
+  return false;
+}
+function badgeOf(p){
+  const d = pairData[subjKey(p)] || {};
+  if (!isShownPair(p)) return '';
+  if (d.ready && d.ready.trim()) return '<span class="badge done">✔ готово</span>';
+  if (d.dz && d.dz.trim()) return '<span class="badge dz">✎ ДЗ</span>';
+  return '';
+}
+function cardHTML(p){
+  return `<div class="pair" onclick="openPair('${p.d}','${p.t.replace(/'/g,"\\'")}')">
+    <div class="tm">${p.t}</div>
+    <div class="ds">${p.ds}</div>
+    <div class="meta">${p.tp} · <span class="room">${p.rm}</span> · ${p.st}</div>
+    ${badgeOf(p)}
+  </div>`;
+}
+function rendList(pairs){
+  if(!pairs.length) return '<p class="empty">Пар нет 🎉</p>';
+  return pairs.map(cardHTML).join('');
+}
+
+let viewDate = new Date(); viewDate.setHours(0,0,0,0);
+let selIso = null;
+function mondayOf(d){ const x=new Date(d); const dow=(x.getDay()+6)%7; x.setDate(x.getDate()-dow); return x; }
+function todayStart(){ const n=new Date(); n.setHours(0,0,0,0); return n; }
+function renderToday(){
+  const now = todayStart();
+  const iso = toISO(now);
+  document.getElementById('todayDate').textContent = now.getDate()+' '+MONTH[now.getMonth()]+', '+WD[now.getDay()];
+  const pairs = pairsOf(iso);
+  document.getElementById('todayPairs').innerHTML = rendList(pairs);
+  document.getElementById('todaySub').textContent = pairs.length ? 'нажми на пару, чтобы открыть задание' : 'выходной — пар нет';
+}
+function renderDowTabs(){
+  const box = document.getElementById('dowTabs');
+  const monday = mondayOf(viewDate);
+  let html = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    const iso = toISO(d);
+    const active = (iso===selIso)?'active':'';
+    const isToday = (iso===toISO(todayStart()))?'today':'';
+    const cnt = pairsOf(iso).length;
+    html += `<button class="${active} ${isToday}" onclick="selectDay(new Date('${iso}'))"><span class="wd">${WD[d.getDay()]}</span>${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}<br><small>${cnt} пар</small></button>`;
+  }
+  box.innerHTML = html;
+  const mEnd = new Date(monday); mEnd.setDate(monday.getDate()+6);
+  document.getElementById('weekLabel').textContent = monday.getDate()+' '+MONTH[monday.getMonth()]+' – '+mEnd.getDate()+' '+MONTH[mEnd.getMonth()]+' '+String(mEnd.getFullYear());
+}
+function selectDay(d){
+  const dt = new Date(d);
+  if(isNaN(dt)) return;
+  viewDate = new Date(dt); viewDate.setHours(0,0,0,0);
+  selIso = toISO(viewDate);
+  renderDowTabs();
+  const d2 = viewDate;
+  document.getElementById('dayPairs').innerHTML = `<div class="dayhead">${WD[d2.getDay()]}, ${d2.getDate()} ${MONTH[d2.getMonth()]}, ${d2.getFullYear()}</div>` + rendList(pairsOf(selIso));
+}
+function shiftWeek(n){ viewDate = new Date(viewDate.getTime()+n*86400000); viewDate.setHours(0,0,0,0); selectDay(viewDate); }
+function goToday(){ selectDay(todayStart()); }
+
+let curKey = null;
+function openPair(d, t){
+  const p = PAIRS.find(x=>x.d===d && x.t===t);
+  if(!p) return;
+  curKey = subjKey(p);
+  document.getElementById('sTitle').innerHTML = `${p.ds}<span class="typ">${p.tp}</span>`;
+  document.getElementById('sMeta').textContent = `${p.t} · ${p.rm} · ${p.st}`;
+  const data = pairData[curKey] || {};
+  document.getElementById('dzText').value = data.dz || '';
+  renderReady(data.ready);
+  document.getElementById('overlay').classList.add('open');
+}
+function renderReady(ready){
+  const box = document.getElementById('readyBox');
+  const btnTxt = document.getElementById('readyBtnTxt');
+  if (ready && ready.trim()){
+    box.style.display = 'block';
+    document.getElementById('readyText').textContent = ready;
+    btnTxt.textContent = '✎ Изменить готовое';
+  } else {
+    box.style.display = 'none';
+    btnTxt.textContent = '＋ Прикрепить готовое';
+  }
+}
+function saveDZ(){
+  if(!curKey) return;
+  if(!pairData[curKey]) pairData[curKey] = {};
+  pairData[curKey].dz = document.getElementById('dzText').value;
+  savePairs();
+  alert('Задание сохранено ✔');
+  renderLists();
+}
+function attachReady(){
+  if(!curKey) return;
+  const current = (pairData[curKey] && pairData[curKey].ready) || '';
+  const val = prompt('Вставь текст готового решения:', current);
+  if (val === null) return;
+  if(!pairData[curKey]) pairData[curKey] = {};
+  pairData[curKey].ready = val;
+  savePairs();
+  renderReady(val);
+  renderLists();
+}
+function closeSheet(e){
+  if(e && e.target && e.target.id !== 'overlay') return;
+  document.getElementById('overlay').classList.remove('open');
+}
+function renderLists(){ renderToday(); if(viewDate) selectDay(viewDate); }
+
+// ====== ЭКСПОРТ / ИМПОРТ JSON ======
+function exportJSON(){
+  const payload = {
+    app: 'sharaga',
+    version: 1,
+    exported: new Date().toISOString(),
+    group: 'Б-ОРМ-41',
+    pairData: pairData
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'домашка.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  setStatus('Экспортировано ✔ положи файл в папку university/дз');
+}
+function importJSON(ev){
+  const file = ev.target.files[0];
+  ev.target.value = '';
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data && data.app === 'sharaga' && data.pairData){
+        pairData = Object.assign({}, data.pairData);
+        savePairs();
+        renderLists();
+        setStatus('Импортировано ✔ задания готовы, смотри у пар');
+      } else {
+        setStatus('⚠ Файл не похож на домашку «Шараги»');
+      }
+    } catch(err){
+      setStatus('⚠ Ошибка при чтении файла');
+    }
+  };
+  reader.readAsText(file, 'utf-8');
+}
+function setStatus(msg){ const s = document.getElementById('syncStatus'); if(s){ s.textContent = msg; } }
+
+function showTab(name){
+  const isSched = (name==='schedule');
+  document.getElementById('view-schedule').style.display = isSched?'block':'none';
+  document.getElementById('view-subjects').style.display = isSched?'none':'block';
+  document.getElementById('ntab').className = isSched?'active':'';
+  document.getElementById('dtab').className = isSched?'':'active';
+  if(isSched){ renderToday(); goToday(); }
+}
+
+showTab('schedule');
+setTimeout(autoCloud, 300);
+
+// ====== УВЕДОМЛЕНИЯ О ПАРАХ ======
+const NKEY_ON = 'sharaga_notif_on';
+const NKEY_MIN = 'sharaga_notif_min';
+const NKEY_SENT = 'sharaga_notif_sent';
+let notifOn = localStorage.getItem(NKEY_ON) === '1';
+let notifMin = parseInt(localStorage.getItem(NKEY_MIN) || '5', 10);
+let notifSent = {};
+try { notifSent = JSON.parse(localStorage.getItem(NKEY_SENT) || '{}'); } catch(e){ notifSent = {}; }
+function saveNotifSet(){
+  const v = document.getElementById('notifMin');
+  if(v) notifMin = parseInt(v.value || '5', 10);
+  localStorage.setItem(NKEY_MIN, String(notifMin));
+  syncPushSettings();
+}
+function urlBase64ToUint8Array(base64String){
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  const out = new Uint8Array(raw.length);
+  for (let i=0;i<raw.length;i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function pushServer(){
+  return 'https://sharaga-sync.sharaga.workers.dev';
+}
+function regSW(){
+  if (!('serviceWorker' in navigator)) return Promise.reject('nosw');
+  return navigator.serviceWorker.ready;
+}
+function getVapid(){
+  return cfFetch(pushServer() + '/api/vapid').then(d => d.publicKey);
+}
+function syncPushSettings(){
+  if (!notifOn) return;
+  fetch(pushServer() + '/api/settings', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ min: notifMin }) }).catch(function(){});
+}
+function subscribePush(){
+  return getVapid().then(vapidKey => regSW().then(reg => reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(vapidKey)
+  }))).then(sub => fetch(pushServer() + '/api/subscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ subscription: sub, min: notifMin }) }));
+}
+function unsubscribePush(){
+  if (!('serviceWorker' in navigator)) return Promise.resolve();
+  return navigator.serviceWorker.ready.then(reg => reg.pushManager.getSubscription()).then(sub => {
+    if (!sub) return;
+    fetch(pushServer() + '/api/unsubscribe', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ endpoint: sub.endpoint }) }).catch(function(){});
+    return sub.unsubscribe();
+  });
+}
+function askNotifPerm(){
+  const msg = document.getElementById('notifPerm');
+  const finish = function(txt){ if(msg) msg.textContent = txt; };
+  if (!('Notification' in window)){ finish('Браузер не даёт системных уведомлений — будут напоминания внутри приложения.'); return; }
+  const doSubscribe = function(){
+    subscribePush().then(function(){ finish('Push-уведомления подключены ✔'); }, function(){ finish('Уведомления разрешены, но push недоступен (добавь приложение на Главный экран).'); });
+  };
+  if (Notification.permission === 'granted'){ finish('Уведомления разрешены ✔ подключаю push…'); doSubscribe(); }
+  else if (Notification.permission === 'default'){
+    Notification.requestPermission().then(function(p){
+      if (p === 'granted'){ finish('Уведомления разрешены ✔ подключаю push…'); doSubscribe(); }
+      else finish('Разрешение не дано — будут напоминания внутри приложения.');
+    });
+  } else finish('Уведомления запрещены в настройках — будут напоминания внутри приложения.');
+}
+function toggleNotif(){
+  const cb = document.getElementById('notifOn');
+  notifOn = cb.checked;
+  localStorage.setItem(NKEY_ON, notifOn ? '1' : '0');
+  if (notifOn) askNotifPerm();
+  else { const m = document.getElementById('notifPerm'); if(m) m.textContent = 'Напоминания выключены.'; unsubscribePush(); }
+}
+function fireToast(title, sub){
+  let t = document.getElementById('notifToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'notifToast';
+    t.className = 'toast';
+    document.body.appendChild(t);
+    t.addEventListener('click', function(){ t.classList.remove('show'); });
+  }
+  t.innerHTML = '<div class="toast-t">' + title + '</div><div class="toast-s">' + (sub||'') + '</div>';
+  t.classList.add('show');
+  clearTimeout(t._h);
+  t._h = setTimeout(function(){ t.classList.remove('show'); }, 15000);
+}
+function fireNotif(p){
+  fireToast('🔥 Пара начинается: ' + p.ds, (p.st || '') + ' · ' + (p.rm || 'каб. ?'));
+  if ('Notification' in window && Notification.permission === 'granted'){
+    try {
+      new Notification('Пара начинается 🎓', { body: p.ds + ' — ' + (p.st||'') + ', ' + (p.rm||'каб. ?'), icon: 'assets/icon-192.png', tag: 'pair-' + p.d + '|' + p.t });
+    } catch(e){}
+  }
+}
+function parseStart(p){
+  const tf = p.t.split(' - ')[0];
+  return new Date(p.d + 'T' + tf + ':00');
+}
+function nextPairInfo(now){
+  let best = null, bestMs = Infinity;
+  for (let i=0;i<PAIRS.length;i++){
+    const start = parseStart(PAIRS[i]);
+    const ms = start - now.getTime();
+    if (ms >= 0 && ms < bestMs){ best = PAIRS[i]; bestMs = ms; }
+  }
+  return best ? { p: best, ms: bestMs } : null;
+}
+function fmtRemain(ms){
+  const s = Math.floor(ms/1000);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if (h>0) return h+' ч '+m+' мин';
+  if (m>=1) return m+' мин '+sec+' сек';
+  return sec+' сек';
+}
+function updateNotifClock(){
+  const now = new Date();
+  const cd = document.getElementById('todayCountdown');
+  const info = nextPairInfo(now);
+  if (info){
+    cd.style.display = 'flex';
+    cd.innerHTML = '<span class="cdt">До пары: ' + fmtRemain(info.ms) + '</span><span class="cdp">' + info.p.ds + ' · ' + info.p.t + '</span>';
+    if (notifOn && info.ms <= notifMin*60000){
+      const k = info.p.d + '|' + info.p.t;
+      if (!notifSent[k]){
+        notifSent[k] = 1;
+        try { localStorage.setItem(NKEY_SENT, JSON.stringify(notifSent)); } catch(e){}
+        fireNotif(info.p);
+      }
+    }
+  } else {
+    cd.style.display = 'none';
+  }
+}
+(function initNotif(){
+  const cb = document.getElementById('notifOn');
+  if (cb) cb.checked = notifOn;
+  const sel = document.getElementById('notifMin');
+  if (sel) sel.value = String(notifMin);
+  if (notifOn) askNotifPerm();
+  updateNotifClock();
+  setInterval(updateNotifClock, 15000);
+})();
+</script>
+</body>
+</html>

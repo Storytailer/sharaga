@@ -1,0 +1,16 @@
+{
+  "name": "Шарага — Б-ОРМ-41",
+  "short_name": "Шарага",
+  "description": "Календарь пар, задания и готовые решения для группы Б-ОРМ-41 КГУ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f6fb",
+  "theme_color": "#1f6fb5",
+  "lang": "ru",
+  "icons": [
+    { "src": "assets/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "assets/icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
