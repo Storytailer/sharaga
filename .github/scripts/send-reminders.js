@@ -99,8 +99,15 @@ async function send(subs, payload){
       ok++;
     } catch(e){
       const code = e.statusCode || 0;
-      log('  ↳ ошибка отправки (' + code + '):', (e.body || e.message || '').toString().slice(0, 200));
-      if (code === 404 || code === 410) await dropSub(sub.endpoint);
+      const body = (e.body || e.message || '').toString();
+      log('  ↳ ошибка отправки (' + code + '):', body.slice(0, 200));
+      // 404/410 — подписки больше нет. VapidPkHashMismatch — подписка сделана
+      // под другой ключ отправителя и принять пуш уже не сможет никогда.
+      // В обоих случаях держать её бессмысленно: пусть телефон подпишется заново.
+      if (code === 404 || code === 410 || body.indexOf('VapidPkHashMismatch') > -1){
+        await dropSub(sub.endpoint);
+        log('     (телефону нужно переподписаться: выключить и включить «Напоминать»)');
+      }
     }
   }
   return ok;
