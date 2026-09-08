@@ -1,4 +1,4 @@
-const CACHE = 'sharaga-v4';
+const CACHE = 'sharaga-v5';
 const ASSETS = [
   './',
   './index.html',

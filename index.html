@@ -427,11 +427,11 @@ function syncDown(){
   setStatus('Загружаю из облака…');
   cloudPairs()
     .then(function(pairs){
-      pairData = Object.assign({}, pairs || {});
-      savePairs(); renderLists();
-      setStatus('Готово ✔ данные получены');
+      const n = Object.keys(pairs||{}).length;
+      if (n){ pairData = Object.assign({}, pairData, pairs); savePairs(); renderLists(); }
+      setStatus(n ? 'Готово ✔ получено ' + n + ' записей' : 'В облаке пока пусто — заданий для тебя нет');
     })
-    .catch(function(e){ setStatus('⚠ Не удалось загрузить: ' + errDetail(e) + (e && e.message === 'empty' ? ' (в облаке пока пусто)' : '') + '.'); });
+    .catch(function(e){ setStatus('⚠ Не удалось загрузить: ' + errDetail(e) + '.'); });
 }
 function autoCloud(){
   cloudPairs().then(function(pairs){
