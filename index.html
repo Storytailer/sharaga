@@ -394,6 +394,7 @@ function cfFetch(url, opts){
   });
 }
 function syncUp(){
+  if (!Object.keys(pairData).length){ setStatus('Нечего отправлять — сначала запиши задание у пары'); return; }
   setStatus('Отправляю в облако…');
   cfFetch(CLOUD_URL, {method:'POST', headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY}, body:JSON.stringify({pairs:pairData})})
     .then(function(d){ setStatus(d.ok ? 'Отправлено ✔ ассистент получил задания' : 'Ошибка: '+(d.error||'нет ответа')); })
