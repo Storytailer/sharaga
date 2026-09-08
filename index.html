@@ -382,6 +382,7 @@ migratePairData();
 const CLOUD_URL = 'https://sharaga-sync.sharaga.workers.dev/api/data';
 const CLOUD_KEY = 'sharaga-sync-2026';
 const CLOUD_MIRROR = 'https://storytailer.github.io/sharaga/cloud/ready.json';
+const CRTD_URL = 'https://crudcrud.com/api/4d039c012df54288a5ad7fe3cb342221/pairs';
 function cfFetch(url, opts){
   let ctrl = null, t = 0;
   if (typeof AbortController !== 'undefined'){ ctrl = new AbortController(); t = setTimeout(function(){ ctrl.abort(); }, 20000); }
@@ -393,12 +394,49 @@ function cfFetch(url, opts){
     return r.json().catch(function(){ throw new Error('bad-json'); });
   });
 }
+function b64u(s){
+  const b = new TextEncoder().encode(s);
+  let bin = '';
+  for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,'');
+}
+function unb64u(k){
+  try {
+    k = k.replace(/-/g,'+').replace(/_/g,'/');
+    while (k.length % 4) k += '=';
+    const bin = atob(k);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch(e){ return null; }
+}
+function crudWrite(pairs){
+  return cfFetch(CRTD_URL).then(function(arr){
+    const body = JSON.stringify({pair64: b64u(JSON.stringify({pairs: pairs}))});
+    if (Array.isArray(arr) && arr.length){
+      return cfFetch(CRTD_URL + '/' + arr[0]._id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: body});
+    }
+    return cfFetch(CRTD_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: body});
+  });
+}
+function crudRead(){
+  return cfFetch(CRTD_URL).then(function(arr){
+    if (!Array.isArray(arr) || !arr.length || !arr[0].pair64) return null;
+    const s = unb64u(arr[0].pair64);
+    if (!s) return null;
+    try { const o = JSON.parse(s); return (o && o.pairs) ? o.pairs : null; } catch(e){ return null; }
+  });
+}
 function syncUp(){
   if (!Object.keys(pairData).length){ setStatus('Нечего отправлять — сначала запиши задание у пары'); return; }
   setStatus('Отправляю в облако…');
   cfFetch(CLOUD_URL, {method:'POST', headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY}, body:JSON.stringify({pairs:pairData})})
     .then(function(d){ setStatus(d.ok ? 'Отправлено ✔ ассистент получил задания' : 'Ошибка: '+(d.error||'нет ответа')); })
-    .catch(function(e){ setStatus('⚠ Не удалось отправить: ' + errDetail(e) + '. Проверь, что на телефоне открывается ' + CLOUD_URL + ' (должен показаться JSON). Если нет — их домен блокирует сеть/VPN/антивирус: попробуй другую сеть или отключи VPN, либо сохрани копию кнопкой «⬇ Экспорт файл».'); });
+    .catch(function(){
+      return crudWrite(pairData)
+        .then(function(){ setStatus('Отправлено ✔ (канал crudcrud) ассистент получил задания'); })
+        .catch(function(e){ setStatus('⚠ Не удалось отправить ни одним каналом: ' + errDetail(e) + '. Сеть закрывает и workers.dev, и crudcrud.com — попробуй другую сеть (Wi-Fi или мобильный интернет), отключи VPN, либо сохрани копию кнопкой «⬇ Экспорт файл».'); });
+    });
 }
 function errDetail(e){
   if (!e) return 'нет соединения';
@@ -418,9 +456,15 @@ function cloudPairs(){
     throw new Error('empty');
   }).catch(function(e){
     if (e && e.message === 'empty') throw e;
-    return cfFetch(CLOUD_MIRROR).then(function(d){
-      if (d.ok && d.data && d.data.pairs) return d.data.pairs;
+    return crudRead().then(function(pairs){
+      if (pairs) return pairs;
       throw new Error('empty');
+    }).catch(function(e2){
+      if (e2 && e2.message === 'empty') throw e2;
+      return cfFetch(CLOUD_MIRROR).then(function(d){
+        if (d.ok && d.data && d.data.pairs) return d.data.pairs;
+        throw new Error('empty');
+      });
     });
   });
 }
