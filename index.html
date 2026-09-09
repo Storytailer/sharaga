@@ -426,9 +426,9 @@ const CLOUD_URL = 'https://sharaga-sync.sharaga.workers.dev/api/data';
 const CLOUD_KEY = 'sharaga-sync-2026';
 const CLOUD_MIRROR = 'https://storytailer.github.io/sharaga/cloud/ready.json';
 const CRTD_URL = 'https://crudcrud.com/api/4d039c012df54288a5ad7fe3cb342221/pairs';
-function cfFetch(url, opts){
+function cfFetch(url, opts, timeoutMs){
   let ctrl = null, t = 0;
-  if (typeof AbortController !== 'undefined'){ ctrl = new AbortController(); t = setTimeout(function(){ ctrl.abort(); }, 20000); }
+  if (typeof AbortController !== 'undefined'){ ctrl = new AbortController(); t = setTimeout(function(){ ctrl.abort(); }, timeoutMs || 20000); }
   opts = opts || {};
   if (ctrl) opts.signal = ctrl.signal;
   return fetch(url, opts).then(function(r){
@@ -482,21 +482,29 @@ function workerWrite(pairs){
     method:'POST',
     headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY},
     body:JSON.stringify({pairs:pairs})
-  }).then(function(d){ if (!d || !d.ok) throw new Error(d && d.error ? d.error : 'bad-json'); return 'воркер'; });
+  }, workerLikelyBlocked() ? 6000 : 20000).then(function(d){
+    if (!d || !d.ok) throw new Error(d && d.error ? d.error : 'bad-json');
+    localStorage.removeItem(BADKEY);
+    return 'воркер';
+  }, function(e){
+    localStorage.setItem(BADKEY, String(Date.now()));
+    throw e;
+  });
 }
 function crudChannel(pairs){ return crudWrite(pairs).then(function(){ return 'crudcrud'; }); }
 
+const BADKEY = 'sharaga_worker_bad';
+function workerLikelyBlocked(){
+  const t = parseInt(localStorage.getItem(BADKEY) || '0', 10);
+  return t && (Date.now() - t) < 24 * 3600 * 1000;
+}
 function channels(){
-  const list = [
+  // Порядок фиксирован: воркер — каноническое хранилище, ассистент читает его.
+  // Если предпочесть crudcrud, задания уедут мимо ассистента.
+  return [
     { name:'воркер', run: workerWrite },
     { name:'crudcrud', run: crudChannel }
   ];
-  const last = localStorage.getItem(CHKEY);
-  if (last){
-    const i = list.findIndex(function(c){ return c.name === last; });
-    if (i > 0) list.unshift(list.splice(i, 1)[0]);
-  }
-  return list;
 }
 
 function pushAll(pairs){
@@ -540,11 +548,15 @@ function retryPending(silent){
   if (!pairs || !Object.keys(pairs).length){ clearPending(); return; }
   // отправляем самое свежее, а не снимок момента ошибки
   const merged = Object.assign({}, pairs, pairData);
+  if (!silent) setStatus('Пробую отправить…');
   pushAll(merged).then(function(via){
     clearPending();
-    if (!silent) setStatus('Отложенная отправка прошла ✔ (' + via + ')');
-    else setStatus('Задания доотправлены в облако ✔ (' + via + ')');
-  }, function(){});
+    setStatus((silent ? 'Задания доотправлены в облако ✔ (' : 'Отложенная отправка прошла ✔ (') + via + ')');
+  }, function(e){
+    // Молча — только автодосыл: иначе фон будет ругаться при каждом открытии.
+    // Нажатие кнопки обязано ответить, иначе выглядит как будто ничего не делает.
+    if (!silent) setStatus('⚠ Пока не проходит: ' + errDetail(e) + '. Задания на месте, попробую сам позже. Срочно — «📤 Отправить файлом».');
+  });
 }
 window.addEventListener('online', function(){ retryPending(true); });
 document.addEventListener('visibilitychange', function(){ if (!document.hidden) retryPending(true); });
@@ -581,21 +593,22 @@ function errDetail(e){
   return 'сеть/сервер (' + (e.name || '?') + (m ? ': ' + m : '') + ')';
 }
 function cloudPairs(){
-  return cfFetch(CLOUD_URL).then(function(d){
-    if (d.ok && d.data && d.data.pairs) return d.data.pairs;
-    throw new Error('empty');
-  }).catch(function(e){
-    if (e && e.message === 'empty') throw e;
-    return crudRead().then(function(pairs){
-      if (pairs) return pairs;
-      throw new Error('empty');
-    }).catch(function(e2){
-      if (e2 && e2.message === 'empty') throw e2;
-      return cfFetch(CLOUD_MIRROR).then(function(d){
-        if (d.ok && d.data && d.data.pairs) return d.data.pairs;
-        throw new Error('empty');
-      });
-    });
+  const soft = function(p){ return p.catch(function(){ return null; }); };
+  const fromWorker = soft(cfFetch(CLOUD_URL, null, workerLikelyBlocked() ? 6000 : 20000)
+    .then(function(d){ return (d.ok && d.data && d.data.pairs) ? d.data.pairs : null; }));
+  const fromCrud = soft(crudRead());
+  const fromMirror = soft(cfFetch(CLOUD_MIRROR)
+    .then(function(d){ return (d.ok && d.data && d.data.pairs) ? d.data.pairs : null; }));
+
+  return Promise.all([fromMirror, fromCrud, fromWorker]).then(function(res){
+    // Объединяем все каналы, а не берём первый ответивший: задание могло уйти
+    // в запасной канал, пока воркер был закрыт, и потерялось бы при чтении.
+    // Порядок важен: воркер — канон, он перекрывает остальных.
+    const merged = {};
+    let got = false;
+    res.forEach(function(p){ if (p && Object.keys(p).length){ Object.assign(merged, p); got = true; } });
+    if (!got) throw new Error('empty');
+    return merged;
   });
 }
 function syncDown(){
