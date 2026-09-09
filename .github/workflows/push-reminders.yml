@@ -2,8 +2,9 @@ name: Push-напоминания о парах
 
 on:
   schedule:
-    # каждые 5 минут; GitHub может задерживать запуск на несколько минут,
-    # поэтому в скрипте есть запас GRACE_MIN
+    # просим каждые 5 минут, но GitHub реально запускает раз в 10-14 минут
+    # (замерено). Поэтому окно поиска пар = LEAD_MIN + GRACE_MIN = 25 минут:
+    # оно шире самого большого пропуска, и напоминание не может проскочить.
     - cron: '*/5 * * * *'
   workflow_dispatch:
     inputs:
@@ -47,7 +48,7 @@ jobs:
           WORKER_URL: https://sharaga-sync.sharaga.workers.dev
           TZ_OFFSET_MIN: '180'
           LEAD_MIN: '10'
-          GRACE_MIN: '9'
+          GRACE_MIN: '15'
           FORCE_TEST: ${{ inputs.test && '1' || '0' }}
         run: node .github/scripts/send-reminders.js
 
