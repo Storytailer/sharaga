@@ -1,0 +1,1136 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Sharaga//Schedule//RU
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Учёбные пары Б-ОРМ-41
+X-WR-TIMEZONE:Europe/Moscow
+BEGIN:VEVENT
+UID:sharaga-20260902-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260902T141000
+DTEND:20260902T154500
+SUMMARY:Организация культурно-массовых мероприятий для молодежи (Пр)
+LOCATION:к. 1/303
+DESCRIPTION:Пара: Организация культурно-массовых мероприятий для молодежи
+ \nВид: Пр\nКабинет: к. 1/303\nПреподаватель: Садовникова Ю.М.\n\nОткрыть
+  расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация культурно-массовых мероприятий дл
+ я молодежи\, к. 1/303
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260902-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260902T155500
+DTEND:20260902T173000
+SUMMARY:Проектирование в профессиональной деятельности (КрП)
+LOCATION:к. 1/708
+DESCRIPTION:Пара: Проектирование в профессиональной деятельности\nВид: Кр
+ П\nКабинет: к. 1/708\nПреподаватель: Познякова К.Н.\n\nОткрыть расписани
+ е: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Проектирование в профессиональной деятельност
+ и\, к. 1/708
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260902-17401915@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260902T174000
+DTEND:20260902T191500
+SUMMARY:Социология молодежи (Лек)
+LOCATION:к. 1/205
+DESCRIPTION:Пара: Социология молодежи\nВид: Лек\nКабинет: к. 1/205\nПрепо
+ даватель: Максимов М.А.\n\nОткрыть расписание: https://storytailer.githu
+ b.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология молодежи\, к. 1/205
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260903-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260903T102500
+DTEND:20260903T120000
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/204\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260903-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260903T122000
+DTEND:20260903T135500
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Пр\nКабинет: к. 1/210\nПреподаватель: Портнова О.А.
+ \n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260903-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260903T141000
+DTEND:20260903T154500
+SUMMARY:Социология молодежи (Пр)
+LOCATION:к. 1/305
+DESCRIPTION:Пара: Социология молодежи\nВид: Пр\nКабинет: к. 1/305\nПрепод
+ аватель: Максимов М.А.\n\nОткрыть расписание: https://storytailer.github
+ .io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология молодежи\, к. 1/305
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260904-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260904T122000
+DTEND:20260904T135500
+SUMMARY:Практикум по социальному проектированию (Инд)
+LOCATION:к. 1/211
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Инд\nКаби
+ нет: к. 1/211\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:
+ //storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/211
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260904-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260904T141000
+DTEND:20260904T154500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Пр)
+LOCATION:к. 1/910
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Пр\nКабинет: к. 1/910\nПреподаватель
+ : Познякова К.Н.\n\nОткрыть расписание: https://storytailer.github.io/sh
+ araga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/910
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260904-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260904T155500
+DTEND:20260904T173000
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Инд)
+LOCATION:к. 1/904
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Инд\nКабинет: к. 1/904\nПреподаватель: Портнова О.А
+ .\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/904
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260907-08301005@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260907T083000
+DTEND:20260907T100500
+SUMMARY:Проектирование в профессиональной деятельности (КрП)
+LOCATION:к. 1/705
+DESCRIPTION:Пара: Проектирование в профессиональной деятельности\nВид: Кр
+ П\nКабинет: к. 1/705\nПреподаватель: Познякова К.Н.\n\nОткрыть расписани
+ е: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Проектирование в профессиональной деятельност
+ и\, к. 1/705
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260907-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260907T102500
+DTEND:20260907T120000
+SUMMARY:Организация культурно-массовых мероприятий для молодежи (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Организация культурно-массовых мероприятий для молодежи
+ \nВид: Пр\nКабинет: к. 1/210\nПреподаватель: Садовникова Ю.М.\n\nОткрыть
+  расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация культурно-массовых мероприятий дл
+ я молодежи\, к. 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260908-08301005@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260908T083000
+DTEND:20260908T100500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Инд)
+LOCATION:к. 1/211
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Инд\nКабинет: к. 1/211\nПреподавател
+ ь: Познякова К.Н.\n\nОткрыть расписание: https://storytailer.github.io/s
+ haraga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/211
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260908-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260908T102500
+DTEND:20260908T120000
+SUMMARY:Практикум проектирования культурно-массовой работы в молодежной с
+ реде (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Практикум проектирования культурно-массовой работы в мо
+ лодежной среде\nВид: Пр\nКабинет: к. 1/210\nПреподаватель: Садовникова Ю
+ .М.\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум проектирования культурно-массовой р
+ аботы в молодежной среде\, к. 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260908-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260908T122000
+DTEND:20260908T135500
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/210\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260909-08301005@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260909T083000
+DTEND:20260909T100500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Пр)
+LOCATION:к. 1/211
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Пр\nКабинет: к. 1/211\nПреподаватель
+ : Познякова К.Н.\n\nОткрыть расписание: https://storytailer.github.io/sh
+ araga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/211
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260909-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260909T102500
+DTEND:20260909T120000
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/907
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/907\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/907
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260909-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260909T122000
+DTEND:20260909T135500
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Лек)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Лек\nКабинет: к. 1/210\nПреподаватель: Портнова О.А
+ .\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260909-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260909T141000
+DTEND:20260909T154500
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Инд)
+LOCATION:к. 1/303
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Инд\nКабинет: к. 1/303\nПреподаватель: Портнова О.А
+ .\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/303
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260910-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260910T122000
+DTEND:20260910T135500
+SUMMARY:Социология (Инд)
+LOCATION:к. 1/705
+DESCRIPTION:Пара: Социология\nВид: Инд\nКабинет: к. 1/705\nПреподаватель:
+  Максимов М.А.\n\nОткрыть расписание: https://storytailer.github.io/shar
+ aga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология\, к. 1/705
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260910-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260910T141000
+DTEND:20260910T154500
+SUMMARY:Практикум проектирования культурно-массовой работы в молодежной с
+ реде (Инд)
+LOCATION:к. 1/310
+DESCRIPTION:Пара: Практикум проектирования культурно-массовой работы в мо
+ лодежной среде\nВид: Инд\nКабинет: к. 1/310\nПреподаватель: Садовникова 
+ Ю.М.\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум проектирования культурно-массовой р
+ аботы в молодежной среде\, к. 1/310
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260910-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260910T155500
+DTEND:20260910T173000
+SUMMARY:Организация культурно-массовых мероприятий для молодежи (Лек)
+LOCATION:к. 1/310
+DESCRIPTION:Пара: Организация культурно-массовых мероприятий для молодежи
+ \nВид: Лек\nКабинет: к. 1/310\nПреподаватель: Садовникова Ю.М.\n\nОткрыт
+ ь расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация культурно-массовых мероприятий дл
+ я молодежи\, к. 1/310
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260911-08301005@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260911T083000
+DTEND:20260911T100500
+SUMMARY:Практикум по социальному проектированию (Инд)
+LOCATION:к. 1/309
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Инд\nКаби
+ нет: к. 1/309\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:
+ //storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/309
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260911-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260911T102500
+DTEND:20260911T120000
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Пр)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Пр\nКабинет: к. 1/204\nПреподаватель: Портнова О.А.
+ \n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260914-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260914T141000
+DTEND:20260914T154500
+SUMMARY:Проектирование в профессиональной деятельности (КрП)
+LOCATION:к. 1/704
+DESCRIPTION:Пара: Проектирование в профессиональной деятельности\nВид: Кр
+ П\nКабинет: к. 1/704\nПреподаватель: Макарова В.А.\n\nОткрыть расписание
+ : https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Проектирование в профессиональной деятельност
+ и\, к. 1/704
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260914-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260914T155500
+DTEND:20260914T173000
+SUMMARY:Социология (Лек)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Социология\nВид: Лек\nКабинет: к. 1/204\nПреподаватель:
+  Максимов М.А.\n\nОткрыть расписание: https://storytailer.github.io/shar
+ aga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология\, к. 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260914-17401915@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260914T174000
+DTEND:20260914T191500
+SUMMARY:Социология (Пр)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Социология\nВид: Пр\nКабинет: к. 1/204\nПреподаватель: 
+ Максимов М.А.\n\nОткрыть расписание: https://storytailer.github.io/shara
+ ga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология\, к. 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260915-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260915T102500
+DTEND:20260915T120000
+SUMMARY:Практикум проектирования культурно-массовой работы в молодежной с
+ реде (Пр)
+LOCATION:к. 1/403
+DESCRIPTION:Пара: Практикум проектирования культурно-массовой работы в мо
+ лодежной среде\nВид: Пр\nКабинет: к. 1/403\nПреподаватель: Садовникова Ю
+ .М.\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум проектирования культурно-массовой р
+ аботы в молодежной среде\, к. 1/403
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260915-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260915T122000
+DTEND:20260915T135500
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/210\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260915-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260915T141000
+DTEND:20260915T154500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Лек)
+LOCATION:к. 1/704
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Лек\nКабинет: к. 1/704\nПреподавател
+ ь: Макарова В.А.\n\nОткрыть расписание: https://storytailer.github.io/sh
+ araga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/704
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260916-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260916T141000
+DTEND:20260916T154500
+SUMMARY:Организация культурно-массовых мероприятий для молодежи (Пр)
+LOCATION:к. 1/303
+DESCRIPTION:Пара: Организация культурно-массовых мероприятий для молодежи
+ \nВид: Пр\nКабинет: к. 1/303\nПреподаватель: Садовникова Ю.М.\n\nОткрыть
+  расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация культурно-массовых мероприятий дл
+ я молодежи\, к. 1/303
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260916-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260916T155500
+DTEND:20260916T173000
+SUMMARY:Проектирование в профессиональной деятельности (КрП)
+LOCATION:к. 1/708
+DESCRIPTION:Пара: Проектирование в профессиональной деятельности\nВид: Кр
+ П\nКабинет: к. 1/708\nПреподаватель: Буслаева Е.Н.\n\nОткрыть расписание
+ : https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Проектирование в профессиональной деятельност
+ и\, к. 1/708
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260916-17401915@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260916T174000
+DTEND:20260916T191500
+SUMMARY:Социология молодежи (Лек)
+LOCATION:к. 1/205
+DESCRIPTION:Пара: Социология молодежи\nВид: Лек\nКабинет: к. 1/205\nПрепо
+ даватель: Максимов М.А.\n\nОткрыть расписание: https://storytailer.githu
+ b.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология молодежи\, к. 1/205
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260917-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260917T102500
+DTEND:20260917T120000
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/204\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260917-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260917T122000
+DTEND:20260917T135500
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Пр)
+LOCATION:к. 1/711
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Пр\nКабинет: к. 1/711\nПреподаватель: Портнова О.А.
+ \n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/711
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260917-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260917T141000
+DTEND:20260917T154500
+SUMMARY:Социология молодежи (Пр)
+LOCATION:к. 1/305
+DESCRIPTION:Пара: Социология молодежи\nВид: Пр\nКабинет: к. 1/305\nПрепод
+ аватель: Максимов М.А.\n\nОткрыть расписание: https://storytailer.github
+ .io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология молодежи\, к. 1/305
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260918-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260918T122000
+DTEND:20260918T135500
+SUMMARY:Практикум по социальному проектированию (Инд)
+LOCATION:к. 1/211
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Инд\nКаби
+ нет: к. 1/211\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:
+ //storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/211
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260918-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260918T141000
+DTEND:20260918T154500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Пр)
+LOCATION:к. 1/910
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Пр\nКабинет: к. 1/910\nПреподаватель
+ : Иванова И.В.\n\nОткрыть расписание: https://storytailer.github.io/shar
+ aga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/910
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260918-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260918T155500
+DTEND:20260918T173000
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Инд)
+LOCATION:к. 1/904
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Инд\nКабинет: к. 1/904\nПреподаватель: Портнова О.А
+ .\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/904
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260921-08301005@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260921T083000
+DTEND:20260921T100500
+SUMMARY:Проектирование в профессиональной деятельности (КрП)
+LOCATION:к. 1/705
+DESCRIPTION:Пара: Проектирование в профессиональной деятельности\nВид: Кр
+ П\nКабинет: к. 1/705\nПреподаватель: Познякова К.Н.\n\nОткрыть расписани
+ е: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Проектирование в профессиональной деятельност
+ и\, к. 1/705
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260921-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260921T102500
+DTEND:20260921T120000
+SUMMARY:Организация культурно-массовых мероприятий для молодежи (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Организация культурно-массовых мероприятий для молодежи
+ \nВид: Пр\nКабинет: к. 1/210\nПреподаватель: Садовникова Ю.М.\n\nОткрыть
+  расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация культурно-массовых мероприятий дл
+ я молодежи\, к. 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260922-08301005@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260922T083000
+DTEND:20260922T100500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Инд)
+LOCATION:к. 1/211
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Инд\nКабинет: к. 1/211\nПреподавател
+ ь: Познякова К.Н.\n\nОткрыть расписание: https://storytailer.github.io/s
+ haraga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/211
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260922-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260922T102500
+DTEND:20260922T120000
+SUMMARY:Практикум проектирования культурно-массовой работы в молодежной с
+ реде (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Практикум проектирования культурно-массовой работы в мо
+ лодежной среде\nВид: Пр\nКабинет: к. 1/210\nПреподаватель: Садовникова Ю
+ .М.\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум проектирования культурно-массовой р
+ аботы в молодежной среде\, к. 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260922-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260922T122000
+DTEND:20260922T135500
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/210\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260923-08301005@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260923T083000
+DTEND:20260923T100500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Пр)
+LOCATION:к. 1/211
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Пр\nКабинет: к. 1/211\nПреподаватель
+ : Познякова К.Н.\n\nОткрыть расписание: https://storytailer.github.io/sh
+ araga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/211
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260923-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260923T102500
+DTEND:20260923T120000
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/204\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260923-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260923T122000
+DTEND:20260923T135500
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Инд)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Инд\nКабинет: к. 1/210\nПреподаватель: Портнова О.А
+ .\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260924-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260924T122000
+DTEND:20260924T135500
+SUMMARY:Социология (Инд)
+LOCATION:к. 1/705
+DESCRIPTION:Пара: Социология\nВид: Инд\nКабинет: к. 1/705\nПреподаватель:
+  Максимов М.А.\n\nОткрыть расписание: https://storytailer.github.io/shar
+ aga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология\, к. 1/705
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260924-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260924T141000
+DTEND:20260924T154500
+SUMMARY:Практикум проектирования культурно-массовой работы в молодежной с
+ реде (Инд)
+LOCATION:к. 1/310
+DESCRIPTION:Пара: Практикум проектирования культурно-массовой работы в мо
+ лодежной среде\nВид: Инд\nКабинет: к. 1/310\nПреподаватель: Садовникова 
+ Ю.М.\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум проектирования культурно-массовой р
+ аботы в молодежной среде\, к. 1/310
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260925-08301005@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260925T083000
+DTEND:20260925T100500
+SUMMARY:Практикум по социальному проектированию (Инд)
+LOCATION:к. 1/309
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Инд\nКаби
+ нет: к. 1/309\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:
+ //storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/309
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260925-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260925T102500
+DTEND:20260925T120000
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Пр)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Пр\nКабинет: к. 1/204\nПреподаватель: Портнова О.А.
+ \n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260928-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260928T141000
+DTEND:20260928T154500
+SUMMARY:Проектирование в профессиональной деятельности (КрП)
+LOCATION:к. 1/704
+DESCRIPTION:Пара: Проектирование в профессиональной деятельности\nВид: Кр
+ П\nКабинет: к. 1/704\nПреподаватель: Познякова К.Н.\n\nОткрыть расписани
+ е: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Проектирование в профессиональной деятельност
+ и\, к. 1/704
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260928-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260928T155500
+DTEND:20260928T173000
+SUMMARY:Социология (Лек)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Социология\nВид: Лек\nКабинет: к. 1/204\nПреподаватель:
+  Максимов М.А.\n\nОткрыть расписание: https://storytailer.github.io/shar
+ aga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология\, к. 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260928-17401915@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260928T174000
+DTEND:20260928T191500
+SUMMARY:Социология (Пр)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Социология\nВид: Пр\nКабинет: к. 1/204\nПреподаватель: 
+ Максимов М.А.\n\nОткрыть расписание: https://storytailer.github.io/shara
+ ga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология\, к. 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260929-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260929T141000
+DTEND:20260929T154500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Лек)
+LOCATION:к. 1/304
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Лек\nКабинет: к. 1/304\nПреподавател
+ ь: Познякова К.Н.\n\nОткрыть расписание: https://storytailer.github.io/s
+ haraga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/304
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260929-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260929T155500
+DTEND:20260929T173000
+SUMMARY:Социология молодежи (Лек)
+LOCATION:к. 1/205
+DESCRIPTION:Пара: Социология молодежи\nВид: Лек\nКабинет: к. 1/205\nПрепо
+ даватель: Максимов М.А.\n\nОткрыть расписание: https://storytailer.githu
+ b.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология молодежи\, к. 1/205
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260929-17401915@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260929T174000
+DTEND:20260929T191500
+SUMMARY:Практикум проектирования культурно-массовой работы в молодежной с
+ реде (Пр)
+LOCATION:к. 1/403
+DESCRIPTION:Пара: Практикум проектирования культурно-массовой работы в мо
+ лодежной среде\nВид: Пр\nКабинет: к. 1/403\nПреподаватель: Садовникова Ю
+ .М.\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум проектирования культурно-массовой р
+ аботы в молодежной среде\, к. 1/403
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260930-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260930T122000
+DTEND:20260930T135500
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Инд)
+LOCATION:к. 1/905
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Инд\nКабинет: к. 1/905\nПреподаватель: Портнова О.А
+ .\n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/905
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260930-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260930T141000
+DTEND:20260930T154500
+SUMMARY:Организация культурно-массовых мероприятий для молодежи (Пр)
+LOCATION:к. 1/303
+DESCRIPTION:Пара: Организация культурно-массовых мероприятий для молодежи
+ \nВид: Пр\nКабинет: к. 1/303\nПреподаватель: Садовникова Ю.М.\n\nОткрыть
+  расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация культурно-массовых мероприятий дл
+ я молодежи\, к. 1/303
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20260930-15551730@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20260930T155500
+DTEND:20260930T173000
+SUMMARY:Проектирование в профессиональной деятельности (КрП)
+LOCATION:к. 1/708
+DESCRIPTION:Пара: Проектирование в профессиональной деятельности\nВид: Кр
+ П\nКабинет: к. 1/708\nПреподаватель: Познякова К.Н.\n\nОткрыть расписани
+ е: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Проектирование в профессиональной деятельност
+ и\, к. 1/708
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20261001-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20261001T102500
+DTEND:20261001T120000
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/204
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/204\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/204
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20261001-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20261001T122000
+DTEND:20261001T135500
+SUMMARY:Организация социально-полезной деятельности в молодёжных организа
+ циях (Пр)
+LOCATION:к. 1/210
+DESCRIPTION:Пара: Организация социально-полезной деятельности в молодёжны
+ х организациях\nВид: Пр\nКабинет: к. 1/210\nПреподаватель: Портнова О.А.
+ \n\nОткрыть расписание: https://storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Организация социально-полезной деятельности в
+  молодёжных организациях\, к. 1/210
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20261001-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20261001T141000
+DTEND:20261001T154500
+SUMMARY:Социология молодежи (Пр)
+LOCATION:к. 1/305
+DESCRIPTION:Пара: Социология молодежи\nВид: Пр\nКабинет: к. 1/305\nПрепод
+ аватель: Максимов М.А.\n\nОткрыть расписание: https://storytailer.github
+ .io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Социология молодежи\, к. 1/305
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20261002-10251200@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20261002T102500
+DTEND:20261002T120000
+SUMMARY:Практикум по социальному проектированию (Пр)
+LOCATION:к. 1/211
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Пр\nКабин
+ ет: к. 1/211\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:/
+ /storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/211
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20261002-12201355@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20261002T122000
+DTEND:20261002T135500
+SUMMARY:Практикум по социальному проектированию (Инд)
+LOCATION:к. 1/211
+DESCRIPTION:Пара: Практикум по социальному проектированию\nВид: Инд\nКаби
+ нет: к. 1/211\nПреподаватель: Иванова И.В.\n\nОткрыть расписание: https:
+ //storytailer.github.io/sharaga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Практикум по социальному проектированию\, к. 
+ 1/211
+END:VALARM
+END:VEVENT
+BEGIN:VEVENT
+UID:sharaga-20261002-14101545@kgu
+DTSTAMP:20260929T145116Z
+DTSTART:20261002T141000
+DTEND:20261002T154500
+SUMMARY:Руководство деятельностью детско-подростковых и молодёжных органи
+ заций и объединений (Пр)
+LOCATION:к. 1/910
+DESCRIPTION:Пара: Руководство деятельностью детско-подростковых и молодёж
+ ных организаций и объединений\nВид: Пр\nКабинет: к. 1/910\nПреподаватель
+ : Познякова К.Н.\n\nОткрыть расписание: https://storytailer.github.io/sh
+ araga/
+BEGIN:VALARM
+ACTION:DISPLAY
+TRIGGER:-PT25M
+DESCRIPTION:Через 25 минут: Руководство деятельностью детско-подростковых
+  и молодёжных организаций и объединений\, к. 1/910
+END:VALARM
+END:VEVENT
+END:VCALENDAR
