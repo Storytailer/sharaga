@@ -171,6 +171,22 @@
   .tcard .tready { font-size:13px; line-height:1.45; white-space:pre-wrap; background:var(--okl);
                    color:var(--oktxt); border-radius:10px; padding:8px 10px; margin-bottom:6px; }
   .tcard .tmeta { font-size:11.5px; color:var(--mut); }
+  .tstat.files { background:var(--blue-ld); color:var(--blue-d); }
+  .tcard .tfiles { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:6px; }
+  .tchip { font-size:11.5px; background:var(--card2); border:1px solid var(--line);
+           border-radius:8px; padding:2px 7px; color:var(--ink); max-width:100%;
+           overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ФАЙЛЫ У ЗАДАНИЯ */
+  .frow { display:flex; align-items:center; gap:9px; background:var(--card); border:1px solid var(--line);
+          border-radius:12px; padding:10px 12px; margin-top:8px; cursor:pointer; transition:background .2s; }
+  .frow:active { background:var(--card2); }
+  .frow .ficoon { font-size:19px; flex:0 0 auto; }
+  .frow .fname { flex:1; font-size:13.5px; font-weight:700; overflow:hidden;
+                 text-overflow:ellipsis; white-space:nowrap; }
+  .frow .fsize { font-size:11.5px; color:var(--mut); flex:0 0 auto; }
+  .frow .fdel { width:26px; height:26px; border-radius:8px; background:var(--card2); color:var(--mut);
+                font-size:14px; font-weight:800; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
 
   .footer { max-width:560px; margin:0 auto; padding:6px 16px 30px; color:var(--mut); font-size:12px; text-align:center; }
 </style>
@@ -297,6 +313,14 @@
       <button class="btn donebtn" id="readyBtn" onclick="attachReady()">
         <span id="readyBtnTxt">＋ Прикрепить готовое</span>
       </button>
+    </div>
+
+    <div class="field">
+      <div class="flabel">📎 Файлы: презентации, методички</div>
+      <div id="fileBox"></div>
+      <button class="btn sec" onclick="pickFile()">＋ Прикрепить файл с телефона</button>
+      <input type="file" id="fileInput" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" style="display:none" onchange="onFilePicked(event)">
+      <p class="synote" id="fileNote" style="margin-top:8px"></p>
     </div>
 
     <button class="btn closebtn" onclick="closeSheet()">Закрыть</button>
@@ -515,7 +539,9 @@ migrateTasks();
 // Один канал вместо трёх. Раньше их было три: воркер, CrudCrud и зеркало на
 // GitHub Pages. CrudCrud не отвечает уже давно, а в зеркало никто не писал —
 // два из трёх каналов были мёртвыми, и на них тратилось время на попытки.
-const CLOUD_URL = 'https://sharaga-sync.sharaga.workers.dev/api/data';
+// let, а не const: адрес облака должен подменяться в тестах, иначе
+// проверка интерфейса писала бы в рабочее облако настоящие записи.
+let CLOUD_URL = 'https://sharaga-sync.sharaga.workers.dev/api/data';
 const CLOUD_KEY = 'sharaga-sync-2026';
 function cfFetch(url, opts, timeoutMs){
   let ctrl = null, t = 0;
@@ -610,7 +636,11 @@ function syncUp(){
 }
 
 // Автодосыл: при запуске, при возврате в приложение и при появлении сети.
+// Автодосыл: повторяет ТОЛЬКО то, что уже не ушло. Молчаливый запуск не
+// должен выгружать в облако всё подряд при каждом открытии приложения —
+// иначе простое открытие приложения меняет облако.
 function retryPending(silent){
+  if (silent && !hasPending()) return;
   if (!silent) setStatus('Пробую отправить…');
   cloudWrite().then(function(via){
     clearPending();
@@ -791,6 +821,7 @@ function openPair(d, t){
     else hint.textContent = 'Дальше пар по этому предмету в расписании нет — сдача на усмотрение преподавателя.';
   }
   renderReady(data.ready);
+  renderFiles(data);
   document.getElementById('overlay').classList.add('open');
 }
 function renderReady(ready){
@@ -865,6 +896,94 @@ function taskList(){
   return out;
 }
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ====== ФАЙЛЫ К ЗАДАНИЮ ======
+// Презентации и методички лежат в репозитории (папка files/) и раздаются с
+// GitHub Pages — в облако попадает только ссылка. Файлы, прикреплённые с
+// телефона, хранятся прямо в записи: загрузить их на сервер некуда.
+const FILE_MAX = 2.5 * 1024 * 1024;   // 2,5 МБ — дальше облако не примет
+const FILE_EXT = /\.(pdf|pptx?|docx?|xlsx?)$/i;
+const ICON = { pdf: '📕', ppt: '📊', pptx: '📊', doc: '📘', docx: '📘', xls: '📗', xlsx: '📗' };
+function humanSize(b){
+  if (!b) return '';
+  // Запятая вместо точки: интерфейс русский, «2,5 МБ» читается правильно.
+  if (b >= 1048576) return (b / 1048576).toFixed(1).replace('.', ',').replace(',0', '') + ' МБ';
+  return Math.round(b / 1024) + ' КБ';
+}
+function filesOf(rec){ return (rec && rec.files) ? rec.files : []; }
+function curRec(){ return curKey ? tasks[curKey] : null; }
+function openFile(rec, i){
+  const f = filesOf(rec)[i];
+  if (!f) return;
+  if (f.data) window.open(f.data, '_blank');
+  else window.open(f.url, '_blank', 'noopener');
+}
+function removeFile(i){
+  const rec = curRec();
+  if (!rec || !rec.files) return;
+  rec.files.splice(i, 1);
+  rec.filesAt = Date.now();
+  savePairs();
+  renderFiles(rec);
+  renderLists();
+  setStatus('Файл убран из задания');
+}
+function renderFiles(rec){
+  const box = document.getElementById('fileBox');
+  const note = document.getElementById('fileNote');
+  if (!box) return;
+  const list = filesOf(rec);
+  if (!list.length){
+    box.innerHTML = '<p class="synote" style="margin:0">Файлов пока нет.</p>';
+    if (note) note.textContent = 'Ассистент тоже может положить сюда презентацию — она появится сама.';
+    return;
+  }
+  box.innerHTML = list.map((f, i) =>
+    '<div class="frow" onclick="openFile(curRec(),' + i + ')">' +
+      '<span class="ficoon">' + (ICON[(f.ext || '').toLowerCase()] || '📄') + '</span>' +
+      '<span class="fname">' + esc(f.name) + '</span>' +
+      '<span class="fsize">' + (f.data ? humanSize(f.data.length * 0.75) : humanSize(f.size)) + '</span>' +
+      '<span class="fdel" onclick="event.stopPropagation();removeFile(' + i + ')">✕</span>' +
+    '</div>').join('');
+  if (note) note.textContent = 'Тапни на файл — откроется. Свои файлы уедут в облако с кнопкой «В облако».';
+}
+function pickFile(){ const el = document.getElementById('fileInput'); if (el) el.click(); }
+function onFilePicked(ev){
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!file || !curKey || !curPair) return;
+  if (!FILE_EXT.test(file.name)){
+    setStatus('⚠ Поддерживаются только PDF, презентации и документы');
+    return;
+  }
+  if (file.size > FILE_MAX){
+    setStatus('⚠ Файл ' + humanSize(file.size) + ' — больше ' + humanSize(FILE_MAX) + '. В облако такой не влезет, пришли его ассистенту файлом.');
+    return;
+  }
+  const rd = new FileReader();
+  rd.onload = function(){
+    const b64 = String(rd.result || '').split(',')[1] || '';
+    if (!tasks[curKey]) tasks[curKey] = { d: curPair.d, t: curPair.t, ds: curPair.ds };
+    const rec = tasks[curKey];
+    if (!rec.files) rec.files = [];
+    // Повторное прикрепление того же имени заменяет файл, а не плодит копии.
+    rec.files = filesOf(rec).filter(f => f.name !== file.name);
+    rec.files.push({
+      name: file.name,
+      ext: (file.name.split('.').pop() || '').toLowerCase(),
+      data: 'data:application/octet-stream;base64,' + b64,
+      mine: true,
+    });
+    rec.filesAt = Date.now();
+    savePairs();
+    renderFiles(rec);
+    renderLists();
+    setStatus('Файл прикреплён ✔ Теперь нажми «⬆ В облако», чтобы отправить');
+  };
+  rd.onerror = function(){ setStatus('⚠ Не удалось прочитать файл'); };
+  rd.readAsDataURL(file);
+}
+
 function renderTaskList(){
   const box = document.getElementById('taskList');
   if (!box) return;
@@ -885,11 +1004,15 @@ function renderTaskList(){
     const st = hasReady ? '<span class="tstat ok">✔ готово</span>'
              : hasDz ? '<span class="tstat wait">✎ ждёт</span>'
              : '';
+    const nf = filesOf(rec).length;
     return '<div class="tcard' + (overdue ? ' late' : '') + '" onclick="openById(\'' + x.id.replace(/'/g,"") + '\')">'
-      + '<div class="thead"><span class="tsub">' + esc(rec.ds || '—') + '</span>' + st + '</div>'
+      + '<div class="thead"><span class="tsub">' + esc(rec.ds || '—') + '</span>'
+      + (nf ? '<span class="tstat files">📎 ' + nf + '</span>' : '') + st + '</div>'
       + '<div class="tdue">' + dueTxt + '</div>'
       + (hasDz ? '<div class="tdz">' + esc(rec.dz) + '</div>' : '')
       + (hasReady ? '<div class="tready">' + esc(rec.ready) + '</div>' : '')
+      + (nf ? '<div class="tfiles">' + filesOf(rec).map(f =>
+          '<span class="tchip">' + (ICON[(f.ext || '').toLowerCase()] || '📄') + ' ' + esc(f.name) + '</span>').join('') + '</div>' : '')
       + '<div class="tmeta">задали: ' + fmtDateShort(rec.d) + ' ' + (rec.t || '').split(' - ')[0] + '</div>'
       + '</div>';
   }).join('');

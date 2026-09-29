@@ -26,6 +26,10 @@ const CLOUD_URL = 'https://sharaga-sync.sharaga.workers.dev/api/data';
 const TASKLIST_URL = 'https://storytailer.github.io/sharaga/cloud/tasks.json';
 const OUT_DIR = path.join(ROOT, 'дз');
 const READY_DIR = path.join(ROOT, 'готовые');
+// Файлы (презентации, методички) живут в files/ и раздаются с GitHub Pages.
+// Папка латинская: кириллица в URL ломает ссылки на iPhone.
+const FILES_DIR = path.join(ROOT, 'files');
+const PAGES_BASE = 'https://storytailer.github.io/sharaga/files/';
 const SNAPSHOT = path.join(OUT_DIR, 'домашка.json');
 
 function readKey(){
@@ -78,6 +82,7 @@ function mergeTasks(remote, local){
     if (l.dz && (!r.dz || (l.dzAt || 0) > (r.dzAt || 0))){ m.dz = l.dz; m.dzAt = l.dzAt; }
     if (l.ready && (!r.ready || (l.readyAt || 0) > (r.readyAt || 0))){ m.ready = l.ready; m.readyAt = l.readyAt; }
     if (l.dueD && !m.dueD){ m.dueD = l.dueD; m.dueT = l.dueT; }
+    if (l.files && (!r.files || (l.filesAt || 0) > (r.filesAt || 0))){ m.files = l.files; m.filesAt = l.filesAt; }
     if (!m.ds && l.ds) m.ds = l.ds;
     out[k] = m;
   }
@@ -195,6 +200,54 @@ function splitJunk(tasks){
   return { good, junk };
 }
 
+// Вложения из files/. Имя файла — та же схема, что у готовых решений:
+//   files/2026-09-29_17-40.pdf          — один файл на пару
+//   files/2026-09-29_17-40_prezentaciya.pdf — несколько файлов на пару
+// Папка латинская: кириллица в URL ломает ссылки на iPhone.
+// Файл лежит в репозитории и раздаётся с GitHub Pages, поэтому в облако
+// попадает только ссылка и размер — сам PDF туда не тащится.
+const FILE_EXT = /\.(pdf|pptx?|docx?|xlsx?)$/i;
+let skipped = [];
+function readAttachments(){
+  const out = {};
+  skipped = [];
+  if (!fs.existsSync(FILES_DIR)) return out;
+  const pairs = readPairs();
+  for (const f of fs.readdirSync(FILES_DIR)){
+    if (f === '.gitkeep' || f.startsWith('.')) continue;
+    // Любой файл в files/, который не привязался, попадает в skipped.
+    // Молча пропускать нельзя: пользователь положил презентацию и ждёт её,
+    // а она не появилась бы без единого слова.
+    if (!FILE_EXT.test(f)){
+      skipped.push('files/' + f + ' — не pdf/презентация/документ');
+      continue;
+    }
+    const stem = f.replace(FILE_EXT, '');
+    // хвост после времени — необязательный: он различает несколько файлов
+    const m = stem.match(/^(\d{4}-\d{2}-\d{2})_(\d{2})-(\d{2})(?:_(.+))?$/);
+    if (!m){
+      skipped.push('files/' + f + ' — имя должно быть вида 2026-09-29_17-40.pdf');
+      continue;
+    }
+    const p = pairs.find(x => x.d === m[1] && String(x.t).split(' - ')[0] === m[2] + ':' + m[3]);
+    if (!p){
+      skipped.push('files/' + f + ' — нет такой пары в расписании');
+      continue;
+    }
+    const id = pairId(p.d, p.t);
+    const st = fs.statSync(path.join(FILES_DIR, f));
+    (out[id] = out[id] || []).push({
+      name: f,
+      url: PAGES_BASE + encodeURIComponent(f),
+      size: st.size,
+      ext: path.extname(f).slice(1).toLowerCase(),
+    });
+  }
+  // Стабильный порядок, чтобы список не прыгал между запусками.
+  for (const id in out) out[id].sort((a, b) => a.name.localeCompare(b.name));
+  return out;
+}
+
 async function pull(key){
   const remote = await cloudGet(key);
   const merged = mergeTasks(remote, readSnapshot());
@@ -210,15 +263,32 @@ async function push(key, local){
   const files = readReadyFiles();
   const remote = await cloudGet(key);
   tasks = mergeTasks(files.size ? {} : remote, tasks);
+  const pairs = readPairs();
   for (const id in files){
     if (!tasks[id]) tasks[id] = { d: id.split('|')[0], t: id.split('|')[1], ds: '' };
     tasks[id].ready = files[id];
     tasks[id].readyAt = Date.now();
-    const p = readPairs().find(x => x.d === tasks[id].d && x.t === tasks[id].t);
+    const p = pairs.find(x => x.d === tasks[id].d && x.t === tasks[id].t);
     if (p) tasks[id].ds = p.ds;
   }
+  // Вложения приклеиваем всегда, даже если готовых решений не было.
+  const att = readAttachments();
+  let nAtt = 0;
+  for (const id in att){
+    if (!tasks[id]) tasks[id] = { d: id.split('|')[0], t: id.split('|')[1], ds: '' };
+    const p = pairs.find(x => x.d === tasks[id].d && x.t === tasks[id].t);
+    if (p) tasks[id].ds = p.ds;
+    tasks[id].files = att[id];
+    tasks[id].filesAt = Date.now();
+    nAtt += att[id].length;
+  }
   await cloudSet(key, tasks);
-  return { n: Object.keys(files).length, tasks };
+  // Снимок на ноутбуке обновляем сразу, иначе в дз/домашка.json файлов
+  // не будет до следующего pull — и на ноутбуке они будут выглядеть
+  // потерянными, хотя в облаке лежат.
+  const { good } = splitJunk(tasks);
+  writeSnapshot(good);
+  return { n: Object.keys(files).length, nAtt, tasks };
 }
 
 async function main(){
@@ -258,7 +328,11 @@ async function main(){
 
   if (cmd === 'push' || cmd === 'auto'){
     const r = await push(key, readSnapshot());
-    if (cmd === 'push') say('Залил в облако готовых решений: ' + r.n);
+    if (skipped.length) for (const s of skipped) console.error('  пропущен ' + s);
+    if (cmd === 'push'){
+      say('Залил в облако: готовых решений ' + r.n + ', файлов ' + r.nAtt +
+          (skipped.length ? ', пропущено ' + skipped.length : ''));
+    }
   }
 }
 
