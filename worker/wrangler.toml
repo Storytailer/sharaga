@@ -1,6 +1,9 @@
 name = "sharaga-sync"
 main = "worker.js"
 compatibility_date = "2025-09-01"
+# Найден в логах wrangler от 04.09.2026 — по этому аккаунту был задеплоен
+# текущий воркер.
+account_id = "a9ea41787a40de4865baabd2b70cc891"
 
 # Таймер воркера: раз в минуту. Именно он шлёт push о парах.
 # GitHub Actions cron для этого не годится — он срабатывает раз в 3–6 часов
