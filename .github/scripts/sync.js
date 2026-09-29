@@ -66,6 +66,21 @@ function request(method, url, body, headers){
   });
 }
 
+// Связь с воркером бывает рваной: соединение обрывается или подвисает.
+// Без повторов фоновая синхронизация просто молча не отрабатывает. Три
+// попытки с паузой — этого хватает; дальше бессмысленно мешать сети.
+async function retry(fn, tries = 3, delayMs = 1200){
+  let last;
+  for (let i = 0; i < tries; i++){
+    try { return await fn(); }
+    catch (e){
+      last = e;
+      if (i < tries - 1) await new Promise(r => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+  throw last;
+}
+
 // ====== Слияние: то же правило, что в приложении ======
 // Побеждает более свежее поле по метке времени. Так готовое с ноутбука
 // не затирает ДЗ, написанное на телефоне, и наоборот.
@@ -157,13 +172,13 @@ function isRealTask(k, rec, pairs){
 }
 
 async function cloudGet(key){
-  const d = await request('GET', CLOUD_URL, null, { 'x-sync-key': key });
+  const d = await retry(() => request('GET', CLOUD_URL, null, { 'x-sync-key': key }));
   return (d && d.ok && d.data && d.data.pairs) ? d.data.pairs : {};
 }
 async function cloudSet(key, tasks){
-  return request('POST', CLOUD_URL, JSON.stringify({ pairs: tasks }), {
+  return retry(() => request('POST', CLOUD_URL, JSON.stringify({ pairs: tasks }), {
     'Content-Type': 'application/json', 'x-sync-key': key,
-  });
+  }));
 }
 
 function listTasks(tasks){

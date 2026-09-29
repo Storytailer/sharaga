@@ -1,0 +1,20 @@
+# PDF, презентации и документы — двоичные файлы. Без этого git может
+# переписать в них переносы строк и испортить: файл откроется, но будет
+# битым, а причина будет неочевидна.
+*.pdf binary
+*.pptx binary
+*.ppt binary
+*.docx binary
+*.doc binary
+*.xlsx binary
+*.png binary
+*.jpg binary
+
+# Скрипты и разметка — обычный текст, переносы строк нормализуем.
+*.js text eol=lf
+*.json text eol=lf
+*.toml text eol=lf
+*.yml text eol=lf
+*.md text eol=lf
+*.html text eol=lf
+*.txt text eol=lf
