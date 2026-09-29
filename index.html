@@ -155,6 +155,23 @@
   .toast .toast-t { font-size:15px; font-weight:800; color:var(--blue-d); }
   .toast .toast-s { font-size:13px; color:var(--mut); margin-top:4px; }
 
+  /* СПИСОК ЗАДАНИЙ */
+  .tcard { background:var(--card); border:1px solid var(--line); border-left:5px solid var(--blue);
+           border-radius:14px; padding:12px 14px; margin:10px 0; box-shadow:var(--shadow); cursor:pointer; }
+  .tcard:active { transform:scale(.99); }
+  .tcard.late { border-left-color:#c0392b; }
+  .tcard .thead { display:flex; align-items:center; gap:8px; margin-bottom:4px; }
+  .tcard .tsub { font-size:14.5px; font-weight:800; line-height:1.25; flex:1; }
+  .tstat { font-size:11px; font-weight:800; border-radius:9px; padding:2px 8px; white-space:nowrap; flex:0 0 auto; }
+  .tstat.ok { background:var(--okl); color:var(--ok); }
+  .tstat.wait { background:#fdeccf; color:#a8721b; }
+  .tcard .tdue { font-size:12.5px; font-weight:700; color:var(--blue-d); margin-bottom:6px; }
+  .tcard.late .tdue { color:#c0392b; }
+  .tcard .tdz { font-size:13.5px; line-height:1.45; white-space:pre-wrap; margin-bottom:6px; }
+  .tcard .tready { font-size:13px; line-height:1.45; white-space:pre-wrap; background:var(--okl);
+                   color:var(--oktxt); border-radius:10px; padding:8px 10px; margin-bottom:6px; }
+  .tcard .tmeta { font-size:11.5px; color:var(--mut); }
+
   .footer { max-width:560px; margin:0 auto; padding:6px 16px 30px; color:var(--mut); font-size:12px; text-align:center; }
 </style>
 </head>
@@ -198,11 +215,16 @@
 </div>
 
 <div id="view-subjects" class="container" style="display:none">
-  <p class="empty">Задания вносятся прямо у каждой пары — нажми на пару в «Расписании».<br><br>Открой пару: сверху запиши ДЗ, снизу прикрепи готовое.</p>
+  <div class="syncbox" style="margin-top:14px">
+    <div class="flabel">📚 Мои задания</div>
+    <p class="synote">Задание задаётся на следующую пару по этому предмету — здесь видно, на какую.</p>
+    <div id="taskList"></div>
+  </div>
 
   <div class="syncbox">
     <div class="flabel">Облачная синхронизация</div>
-    <p class="synote">Запиши ДЗ у пар, нажми <b>«⬆ В облако»</b> — ассистент получит задания. Когда он подготовит готовые и зальёт их в облако, нажми <b>«⬇ Из облака»</b> — готовые появятся у пар.</p>
+    <p class="synote">Запиши ДЗ у пары, нажми <b>«⬆ В облако»</b> — ассистент получит задания. Когда он подготовит готовые и зальёт их в облако, нажми <b>«⬇ Из облака»</b> — готовые появятся у пар.</p>
+    <p class="synote">Из облака приложение забирает данные <b>само</b> при каждом открытии и возврате на экран — кнопка нужна только если хочется проверить прямо сейчас.</p>
     <button class="btn" onclick="syncUp()">⬆ В облако (отправить ДЗ)</button>
     <button class="btn sec" onclick="syncDown()">⬇ Из облака (получить готовое)</button>
     <p class="synote" id="syncStatus" style="margin-top:10px"></p>
@@ -262,6 +284,7 @@
     <div class="field">
       <div class="flabel">📝 Задание (ДЗ)</div>
       <textarea id="dzText" placeholder="Напиши, что задали на эту пару…"></textarea>
+      <p class="synote" id="dueHint" style="margin-top:8px"></p>
     </div>
     <button class="btn sec" onclick="saveDZ()">Сохранить задание</button>
 
@@ -292,7 +315,7 @@ function applyTheme(dark){
 }
 function toggleTheme(){ applyTheme(!document.documentElement.classList.contains('dark')); }
 if (localStorage.getItem(TKEY) === 'dark'){ document.documentElement.classList.add('dark'); document.getElementById('themeBtn').textContent = '☀️'; }
-const APP_VERSION = 'v9 · 2026-09-09';
+const APP_VERSION = 'v10 · 2026-09-29';
 if ('serviceWorker' in navigator){
   window.addEventListener('load', function(){
     navigator.serviceWorker.register('./sw.js').then(function(reg){
@@ -387,45 +410,113 @@ const PAIRS = [
   {"d":"2026-10-02","t":"15:55 - 17:30","ds":"Организация социально-полезной деятельности в молодёжных организациях","tp":"Инд","rm":"к. 1/904","st":"Портнова О.А."}
 ];
 
-const DKEY = 'uchenba_pairdata_v2';
-let pairData = {};
-try { pairData = JSON.parse(localStorage.getItem(DKEY) || '{}'); } catch(e){ pairData = {}; }
-// Данные теперь хранятся по одному на предмет (ds), а не по дате|времени.
-// Так «✎ ДЗ»/«✔ готово» не дублируется на каждый день, когда идёт пара.
-function subjKey(p){ return p.ds; }
-function savePairs(){ localStorage.setItem(DKEY, JSON.stringify(pairData)); }
+const DKEY = 'sharaga_tasks_v3';
+let tasks = {};
+try { tasks = JSON.parse(localStorage.getItem(DKEY) || '{}'); } catch(e){ tasks = {}; }
+
+// ====== МОДЕЛЬ ЗАДАНИЙ ======
+// Запись ключуется по паре, на которой задание ЗАДАЛИ: "дата|время".
+// Раньше ключом был предмет, и это ломало всё: записи затирали друг друга,
+// а в облако уходило «Социология = эссе» без даты, поэтому по заданию
+// нельзя было понять, к какой паре оно относится.
+//
+// Теперь запись сама помнит, на какой паре задание задали (d|t), на какой
+// паре его надо сдать (dueD|dueT — ближайшая следующая пара того же предмета)
+// и когда каждое поле менялось (dzAt/readyAt) — по меткам времени облако
+// сливается построчно, и свежее ДЗ больше не затирается старым.
 function startOf(p){ return new Date(p.d + 'T' + p.t.split(' - ')[0] + ':00').getTime(); }
-// Перенос старого формата (дата|время) в новый (по предмету): берём последнюю
-// запись по каждому полю, чтобы у предмета осталось одно ДЗ и одно готовое.
-function migratePairData(){
+function pairId(d, t){ return d + '|' + t; }
+function pairById(id){ const p = id.split('|'); return PAIRS.find(x => x.d === p[0] && x.t === p[1]) || null; }
+function savePairs(){ localStorage.setItem(DKEY, JSON.stringify(tasks)); }
+
+// Ближайшая пара того же предмета ПОСЛЕ указанной. Это и есть «срок сдачи»:
+// задали в понедельник — сдать на следующей паре, в среду.
+function nextPairOfSubject(ds, afterMs){
+  let best = null, bestMs = Infinity;
+  for (const p of PAIRS){
+    if (p.ds !== ds) continue;
+    const ms = startOf(p);
+    if (ms > afterMs && ms < bestMs){ best = p; bestMs = ms; }
+  }
+  return best;
+}
+// Пара, на которой задание сдаётся (её показываем в календаре).
+function duePair(rec){
+  if (!rec) return null;
+  if (rec.dueD && rec.dueT) return PAIRS.find(x => x.d === rec.dueD && x.t === rec.dueT) || null;
+  return null;
+}
+// Запись на конкретной паре, если она там задавалась.
+function taskAt(p){ return tasks[pairId(p.d, p.t)] || null; }
+// Запись, сдаваемая на этой паре.
+function taskDueAt(p){
+  for (const k in tasks){
+    const rec = tasks[k];
+    if (rec && rec.dueD === p.d && rec.dueT === p.t) return rec;
+  }
+  return null;
+}
+
+// Перенос записей из старых форматов в новый. Старых было два:
+//   1) ключ «дата|время» (самое первое приложение);
+//   2) ключ — название предмета (текущее на момент проверки).
+// Ничего не выбрасываем: что не нашли в расписании, оставляем как есть в _loose,
+// чтобы данные не пропали молча, и они попадут в облако.
+function migrateTasks(){
+  let raw = {};
+  try { raw = JSON.parse(localStorage.getItem('uchenba_pairdata_v2') || '{}'); } catch(e){ raw = {}; }
   const out = {};
-  let changed = false;
-  for (const k in pairData){
-    const rec = pairData[k];
-    if (!rec || typeof rec !== 'object'){ changed = true; continue; }
+  const loose = {};
+  const now = Date.now();
+  const put = function(d, t, dz, ready, dzAt, readyAt){
+    const id = pairId(d, t);
+    const p = PAIRS.find(x => x.d === d && x.t === t);
+    const rec = out[id] || { d: d, t: t, ds: p ? p.ds : '' };
+    if (dz && dz.trim()){ rec.dz = dz; rec.dzAt = dzAt || now; }
+    if (ready && ready.trim()){ rec.ready = ready; rec.readyAt = readyAt || now; }
+    if (p){
+      const nx = nextPairOfSubject(p.ds, startOf(p));
+      rec.ds = p.ds;
+      if (nx){ rec.dueD = nx.d; rec.dueT = nx.t; }
+    }
+    out[id] = rec;
+  };
+  for (const k in raw){
+    const rec = raw[k];
+    if (!rec || typeof rec !== 'object') continue;
     if (k.indexOf('|') >= 0){
       const parts = k.split('|');
-      const p = PAIRS.find(function(x){ return x.d===parts[0] && x.t===parts[1]; });
-      if (p){
-        const cur = out[p.ds] || {};
-        if (rec.dz && rec.dz.trim()) cur.dz = rec.dz;
-        if (rec.ready && rec.ready.trim()) cur.ready = rec.ready;
-        out[p.ds] = cur;
-      }
-      changed = true;
+      put(parts[0], parts[1], rec.dz, rec.ready, rec.dzAt, rec.readyAt);
     } else {
-      out[k] = rec;
+      // Ключ — предмет: раскладываем по ближайшей ещё не прошедшей паре
+      // этого предмета, потому что так задание и попадало в календарь раньше.
+      const cands = PAIRS.filter(x => x.ds === k).sort((a,b) => startOf(a) - startOf(b));
+      let target = cands.filter(x => startOf(x) >= now)[0] || cands[cands.length - 1];
+      if (target) put(target.d, target.t, rec.dz, rec.ready, rec.dzAt, rec.readyAt);
+      else loose[k] = rec;
     }
   }
-  if (changed){ pairData = out; savePairs(); }
+  for (const k in tasks){
+    const rec = tasks[k];
+    if (!rec || typeof rec !== 'object') continue;
+    const prev = out[k];
+    if (prev){
+      if (rec.dz && (!prev.dz || (rec.dzAt || 0) > (prev.dzAt || 0))){ prev.dz = rec.dz; prev.dzAt = rec.dzAt || now; }
+      if (rec.ready && (!prev.ready || (rec.readyAt || 0) > (prev.readyAt || 0))){ prev.ready = rec.ready; prev.readyAt = rec.readyAt || now; }
+    } else out[k] = rec;
+  }
+  if (Object.keys(loose).length) out._loose = loose;
+  tasks = out;
+  savePairs();
 }
-migratePairData();
+migrateTasks();
 
 // ====== ОБЛАКО (Cloudflare) ======
+// Один канал вместо трёх. Раньше их было три: воркер, CrudCrud и зеркало на
+// GitHub Pages. CrudCrud не отвечает уже давно, а в зеркало никто не писал —
+// два из трёх каналов были мёртвыми, и на них тратилось время на попытки.
 const CLOUD_URL = 'https://sharaga-sync.sharaga.workers.dev/api/data';
 const CLOUD_KEY = 'sharaga-sync-2026';
-const CLOUD_MIRROR = 'https://storytailer.github.io/sharaga/cloud/ready.json';
-const CRTD_URL = 'https://crudcrud.com/api/4d039c012df54288a5ad7fe3cb342221/pairs';
 function cfFetch(url, opts, timeoutMs){
   let ctrl = null, t = 0;
   if (typeof AbortController !== 'undefined'){ ctrl = new AbortController(); t = setTimeout(function(){ ctrl.abort(); }, timeoutMs || 20000); }
@@ -437,91 +528,69 @@ function cfFetch(url, opts, timeoutMs){
     return r.json().catch(function(){ throw new Error('bad-json'); });
   });
 }
-function b64u(s){
-  const b = new TextEncoder().encode(s);
-  let bin = '';
-  for (let i = 0; i < b.length; i++) bin += String.fromCharCode(b[i]);
-  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/g,'');
-}
-function unb64u(k){
-  try {
-    k = k.replace(/-/g,'+').replace(/_/g,'/');
-    while (k.length % 4) k += '=';
-    const bin = atob(k);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    return new TextDecoder('utf-8').decode(bytes);
-  } catch(e){ return null; }
-}
-function crudWrite(pairs){
-  return cfFetch(CRTD_URL).then(function(arr){
-    const body = JSON.stringify({pair64: b64u(JSON.stringify({pairs: pairs}))});
-    if (Array.isArray(arr) && arr.length){
-      return cfFetch(CRTD_URL + '/' + arr[0]._id, {method:'PUT', headers:{'Content-Type':'application/json'}, body: body});
-    }
-    return cfFetch(CRTD_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body: body});
-  });
-}
-function crudRead(){
-  return cfFetch(CRTD_URL).then(function(arr){
-    if (!Array.isArray(arr) || !arr.length || !arr[0].pair64) return null;
-    const s = unb64u(arr[0].pair64);
-    if (!s) return null;
-    try { const o = JSON.parse(s); return (o && o.pairs) ? o.pairs : null; } catch(e){ return null; }
-  });
-}
 // ====== ОТПРАВКА С ПОВТОРАМИ ======
-// У телефона канал до workers.dev бывает закрыт оператором. Раньше отправка
-// просто падала и данные оставались только на устройстве. Теперь неудачная
+// У телефона канал до workers.dev бывает закрыт оператором. Неудачная
 // отправка кладётся в очередь и уходит сама, как только сеть позволит.
 const QKEY = 'sharaga_pending';
 const CHKEY = 'sharaga_last_channel';
-
-function workerWrite(pairs){
-  return cfFetch(CLOUD_URL, {
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY},
-    body:JSON.stringify({pairs:pairs})
-  }, workerLikelyBlocked() ? 6000 : 20000).then(function(d){
-    if (!d || !d.ok) throw new Error(d && d.error ? d.error : 'bad-json');
-    localStorage.removeItem(BADKEY);
-    return 'воркер';
-  }, function(e){
-    localStorage.setItem(BADKEY, String(Date.now()));
-    throw e;
-  });
-}
-function crudChannel(pairs){ return crudWrite(pairs).then(function(){ return 'crudcrud'; }); }
-
 const BADKEY = 'sharaga_worker_bad';
 function workerLikelyBlocked(){
   const t = parseInt(localStorage.getItem(BADKEY) || '0', 10);
   return t && (Date.now() - t) < 24 * 3600 * 1000;
 }
-function channels(){
-  // Порядок фиксирован: воркер — каноническое хранилище, ассистент читает его.
-  // Если предпочесть crudcrud, задания уедут мимо ассистента.
-  return [
-    { name:'воркер', run: workerWrite },
-    { name:'crudcrud', run: crudChannel }
-  ];
-}
 
-function pushAll(pairs){
-  const list = channels();
-  let lastErr = null;
-  const step = function(i){
-    if (i >= list.length) return Promise.reject(lastErr || new Error('нет каналов'));
-    return list[i].run(pairs).then(function(via){
-      localStorage.setItem(CHKEY, list[i].name);
-      return via;
-    }, function(e){ lastErr = e; return step(i + 1); });
-  };
-  return step(0);
+// ====== СЛИЯНИЕ ======
+// Ключ — пара, на которой задали. Поля сливаются по меткам времени:
+// dz берётся из более свежей стороны, ready — из более свежей.
+// Так «⬆ В облако» со стиранием твоего ДЗ ассистентом больше невозможно,
+// и наоборот: твоё устройство не затрёт готовое, если у него нет изменений.
+function mergeTasks(remote, local){
+  const out = {};
+  const copy = function(rec){ const c = {}; for (const k in rec) c[k] = rec[k]; return c; };
+  for (const k in (remote || {})) if (k !== '_loose') out[k] = copy(remote[k]);
+  for (const k in (local || {})){
+    if (k === '_loose') continue;
+    const r = remote ? remote[k] : null;
+    const l = local[k];
+    if (!r){ out[k] = copy(l); continue; }
+    const m = copy(r);
+    if (l.dz && (!r.dz || (l.dzAt || 0) > (r.dzAt || 0))){ m.dz = l.dz; m.dzAt = l.dzAt; }
+    if (l.ready && (!r.ready || (l.readyAt || 0) > (r.readyAt || 0))){ m.ready = l.ready; m.readyAt = l.readyAt; }
+    if (l.dueD && !m.dueD){ m.dueD = l.dueD; m.dueT = l.dueT; }
+    if (!m.ds && l.ds) m.ds = l.ds;
+    out[k] = m;
+  }
+  return out;
 }
-
+// Перед записью подтягиваем облако, чтобы не затереть чужое свежее.
+function cloudWrite(){
+  return cfFetch(CLOUD_URL, null, workerLikelyBlocked() ? 6000 : 15000).then(function(d){
+    const remote = (d && d.ok && d.data && d.data.pairs) ? d.data.pairs : {};
+    const merged = mergeTasks(remote, tasks);
+    tasks = merged; savePairs();
+    return cfFetch(CLOUD_URL, {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY},
+      body:JSON.stringify({ pairs: merged })
+    }, workerLikelyBlocked() ? 6000 : 15000);
+  }).then(function(d){
+    if (!d || !d.ok) throw new Error(d && d.error ? d.error : 'bad-json');
+    localStorage.removeItem(BADKEY);
+    localStorage.setItem(CHKEY, 'воркер');
+    return 'воркер';
+  }, function(e){
+    // Отдельно помечаем именно сетевой сбой: если облако ответило ошибкой
+    // сервера, «заблокирован оператором» — неверный вывод и он сбивает таймауты.
+    if (e && (e.name === 'TypeError' || e.name === 'AbortError')) localStorage.setItem(BADKEY, String(Date.now()));
+    throw e;
+  });
+}
+function cloudRead(){
+  return cfFetch(CLOUD_URL, null, workerLikelyBlocked() ? 6000 : 15000)
+    .then(function(d){ return (d && d.ok && d.data && d.data.pairs) ? d.data.pairs : null; });
+}
 function hasPending(){ return !!localStorage.getItem(QKEY); }
-function setPending(pairs){ try { localStorage.setItem(QKEY, JSON.stringify(pairs)); } catch(e){} updatePendingBadge(); }
+function setPending(){ try { localStorage.setItem(QKEY, '1'); } catch(e){} updatePendingBadge(); }
 function clearPending(){ localStorage.removeItem(QKEY); updatePendingBadge(); }
 function updatePendingBadge(){
   const el = document.getElementById('pendingBox');
@@ -529,29 +598,23 @@ function updatePendingBadge(){
 }
 
 function syncUp(){
-  if (!Object.keys(pairData).length){ setStatus('Нечего отправлять — сначала запиши задание у пары'); return; }
+  if (!Object.keys(tasks).length){ setStatus('Нечего отправлять — сначала запиши задание у пары'); return; }
   setStatus('Отправляю в облако…');
-  pushAll(pairData).then(function(via){
+  cloudWrite().then(function(via){
     clearPending();
     setStatus('Отправлено ✔ (' + via + ') ассистент получил задания');
   }, function(e){
-    setPending(pairData);
+    setPending();
     setStatus('⚠ Сейчас не ушло: ' + errDetail(e) + '. Задания сохранены и отправятся сами, как только сеть пустит. Если срочно — жми «📤 Отправить файлом» и пришли файл ассистенту.');
   });
 }
 
 // Автодосыл: при запуске, при возврате в приложение и при появлении сети.
 function retryPending(silent){
-  if (!hasPending()) return;
-  let pairs;
-  try { pairs = JSON.parse(localStorage.getItem(QKEY)); } catch(e){ clearPending(); return; }
-  if (!pairs || !Object.keys(pairs).length){ clearPending(); return; }
-  // отправляем самое свежее, а не снимок момента ошибки
-  const merged = Object.assign({}, pairs, pairData);
   if (!silent) setStatus('Пробую отправить…');
-  pushAll(merged).then(function(via){
+  cloudWrite().then(function(via){
     clearPending();
-    setStatus((silent ? 'Задания доотправлены в облако ✔ (' : 'Отложенная отправка прошла ✔ (') + via + ')');
+    if (!silent) setStatus('Отложенная отправка прошла ✔ (' + via + ')');
   }, function(e){
     // Молча — только автодосыл: иначе фон будет ругаться при каждом открытии.
     // Нажатие кнопки обязано ответить, иначе выглядит как будто ничего не делает.
@@ -559,12 +622,13 @@ function retryPending(silent){
   });
 }
 window.addEventListener('online', function(){ retryPending(true); });
-document.addEventListener('visibilitychange', function(){ if (!document.hidden) retryPending(true); });
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) autoCloud(); });
 
 // Гарантированный запасной канал: файл уходит через «Поделиться» в любой
-// мессенджер — это не зависит от того, какие домены закрыл оператор.
+// мессенджер или прямо в iCloud Drive — это не зависит от того,
+// какие домены закрыл оператор.
 function shareJSON(){
-  const text = JSON.stringify({ pairs: pairData }, null, 2);
+  const text = JSON.stringify({ app: 'sharaga', version: 3, tasks: tasks }, null, 2);
   const fname = 'домашка.json';
   const file = (function(){
     try { return new File([text], fname, { type: 'application/json' }); } catch(e){ return null; }
@@ -592,73 +656,75 @@ function errDetail(e){
   if (e.name === 'TypeError') return 'соединение не установилось — адрес заблокирован или нет сети';
   return 'сеть/сервер (' + (e.name || '?') + (m ? ': ' + m : '') + ')';
 }
-function cloudPairs(){
-  const soft = function(p){ return p.catch(function(){ return null; }); };
-  const fromWorker = soft(cfFetch(CLOUD_URL, null, workerLikelyBlocked() ? 6000 : 20000)
-    .then(function(d){ return (d.ok && d.data && d.data.pairs) ? d.data.pairs : null; }));
-  const fromCrud = soft(crudRead());
-  const fromMirror = soft(cfFetch(CLOUD_MIRROR)
-    .then(function(d){ return (d.ok && d.data && d.data.pairs) ? d.data.pairs : null; }));
-
-  return Promise.all([fromMirror, fromCrud, fromWorker]).then(function(res){
-    // Объединяем все каналы, а не берём первый ответивший: задание могло уйти
-    // в запасной канал, пока воркер был закрыт, и потерялось бы при чтении.
-    // Порядок важен: воркер — канон, он перекрывает остальных.
-    const merged = {};
-    let got = false;
-    res.forEach(function(p){ if (p && Object.keys(p).length){ Object.assign(merged, p); got = true; } });
-    if (!got) throw new Error('empty');
-    return merged;
-  });
-}
 function syncDown(){
   setStatus('Загружаю из облака…');
-  cloudPairs()
-    .then(function(pairs){
-      const n = Object.keys(pairs||{}).length;
-      if (n){ pairData = Object.assign({}, pairData, pairs); savePairs(); renderLists(); }
-      setStatus(n ? 'Готово ✔ получено ' + n + ' записей' : 'В облаке пока пусто — заданий для тебя нет');
+  cloudRead()
+    .then(function(remote){
+      if (!remote || !Object.keys(remote).length){
+        setStatus('В облаке пока пусто — заданий для тебя нет');
+        return 0;
+      }
+      // Сливаем по меткам времени: твоё свежее ДЗ не затирается старым
+      // облаком, и наоборот — готовое ассистента не пропадёт.
+      const before = JSON.stringify(tasks);
+      tasks = mergeTasks(remote, tasks);
+      savePairs();
+      if (JSON.stringify(tasks) !== before) renderLists();
+      const n = Object.keys(tasks).filter(k => k !== '_loose').length;
+      setStatus('Готово ✔ получено ' + n + ' записей');
+      return n;
     })
     .catch(function(e){ setStatus('⚠ Не удалось загрузить: ' + errDetail(e) + '.'); });
 }
+// Тихое автообновление при каждом открытии и возврате на экран.
+// Раньше оно звали недоделанные каналы, из-за чего фон молчал по 20 секунд.
 function autoCloud(){
-  cloudPairs().then(function(pairs){
-    if (Object.keys(pairs||{}).length){
-      pairData = Object.assign({}, pairData, pairs);
-      savePairs(); renderLists();
-    }
-  }).catch(function(){});
+  if (autoCloud._busy) return;
+  autoCloud._busy = true;
+  cloudRead().then(function(remote){
+    if (!remote || !Object.keys(remote).length) return;
+    const before = JSON.stringify(tasks);
+    const merged = mergeTasks(remote, tasks);
+    if (JSON.stringify(merged) === before) return;
+    tasks = merged; savePairs(); renderLists();
+  }).catch(function(){}).then(function(){ autoCloud._busy = false; });
 }
 
 const MONTH = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const WD = ['вс','пн','вт','ср','чт','пт','сб'];
 function toISO(date){ return date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0'); }
+function fmtDateShort(iso){
+  const p = iso.split('-');
+  return Number(p[2]) + ' ' + MONTH[Number(p[1]) - 1];
+}
+const DOW_LONG = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+function dowOf(iso){
+  const p = iso.split('-');
+  return DOW_LONG[new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2])).getDay()];
+}
 
 function pairsOf(dateStr){ return (PAIRS.filter(p=>p.d===dateStr)).sort((a,b)=>a.t.localeCompare(b.t)); }
-function isShownPair(p){
-  const rec = pairData[subjKey(p)];
-  if (!rec) return false;
-  if ((!rec.dz || !rec.dz.trim()) && (!rec.ready || !rec.ready.trim())) return false;
-  const now = Date.now();
-  const list = PAIRS.filter(function(x){ return x.ds === p.ds; }).sort(function(a,b){ return startOf(a)-startOf(b); });
-  for (let i=0;i<list.length;i++){
-    if (startOf(list[i]) >= now) return list[i].d === p.d && list[i].t === p.t;
-  }
-  return false;
-}
-function badgeOf(p){
-  const d = pairData[subjKey(p)] || {};
-  if (!isShownPair(p)) return '';
-  if (d.ready && d.ready.trim()) return '<span class="badge done">✔ готово</span>';
-  if (d.dz && d.dz.trim()) return '<span class="badge dz">✎ ДЗ</span>';
-  return '';
+// Что показывать на карточке пары. Задание задали раньше, а сдать его надо
+// здесь — поэтому карточка смотрит и на «задали здесь», и на «сдать здесь».
+function pairBadge(p){
+  const here = taskAt(p);
+  const due = taskDueAt(p);
+  const parts = [];
+  const mk = function(rec, kind){
+    if (!rec) return;
+    if (rec.ready && rec.ready.trim()) parts.push('<span class="badge done">' + (kind === 'due' ? '✔ готово' : '✔ готово') + '</span>');
+    else if (rec.dz && rec.dz.trim()) parts.push('<span class="badge dz">' + (kind === 'due' ? '✎ ДЗ' : '✎ задали') + '</span>');
+  };
+  if (here && (!due || due !== here)) mk(here, 'given');
+  if (due) mk(due, 'due');
+  return parts.join(' ');
 }
 function cardHTML(p){
   return `<div class="pair" onclick="openPair('${p.d}','${p.t.replace(/'/g,"\\'")}')">
     <div class="tm">${p.t}</div>
     <div class="ds">${p.ds}</div>
     <div class="meta">${p.tp} · <span class="room">${p.rm}</span> · ${p.st}</div>
-    ${badgeOf(p)}
+    ${pairBadge(p)}
   </div>`;
 }
 function rendList(pairs){
@@ -707,14 +773,23 @@ function shiftWeek(n){ viewDate = new Date(viewDate.getTime()+n*86400000); viewD
 function goToday(){ selectDay(todayStart()); }
 
 let curKey = null;
+let curPair = null;
 function openPair(d, t){
   const p = PAIRS.find(x=>x.d===d && x.t===t);
   if(!p) return;
-  curKey = subjKey(p);
+  curPair = p;
+  curKey = pairId(p.d, p.t);
   document.getElementById('sTitle').innerHTML = `${p.ds}<span class="typ">${p.tp}</span>`;
-  document.getElementById('sMeta').textContent = `${p.t} · ${p.rm} · ${p.st}`;
-  const data = pairData[curKey] || {};
+  document.getElementById('sMeta').textContent = `${fmtDateShort(p.d)} · ${p.t} · ${p.rm} · ${p.st}`;
+  const data = tasks[curKey] || {};
   document.getElementById('dzText').value = data.dz || '';
+  // Подсказка «сдать на такой-то паре» — иначе непонятно, когда это сдавать.
+  const hint = document.getElementById('dueHint');
+  const nx = nextPairOfSubject(p.ds, startOf(p));
+  if (hint){
+    if (nx) hint.textContent = 'Срок: следующая пара по этому предмету — ' + fmtDateShort(nx.d) + ', ' + nx.t.split(' - ')[0];
+    else hint.textContent = 'Дальше пар по этому предмету в расписании нет — сдача на усмотрение преподавателя.';
+  }
   renderReady(data.ready);
   document.getElementById('overlay').classList.add('open');
 }
@@ -731,20 +806,32 @@ function renderReady(ready){
   }
 }
 function saveDZ(){
-  if(!curKey) return;
-  if(!pairData[curKey]) pairData[curKey] = {};
-  pairData[curKey].dz = document.getElementById('dzText').value;
+  if(!curKey || !curPair) return;
+  const val = document.getElementById('dzText').value;
+  if(!tasks[curKey]) tasks[curKey] = { d: curPair.d, t: curPair.t, ds: curPair.ds };
+  const rec = tasks[curKey];
+  rec.dz = val;
+  rec.dzAt = Date.now();
+  // Срок сдачи считаем заново: если пару перенесли, дата сдачи должна поехать
+  // вместе с ней, а не остаться на старой.
+  const nx = nextPairOfSubject(curPair.ds, startOf(curPair));
+  if (nx){ rec.dueD = nx.d; rec.dueT = nx.t; } else { delete rec.dueD; delete rec.dueT; }
   savePairs();
-  alert('Задание сохранено ✔');
   renderLists();
+  const msg = val.trim()
+    ? 'Задание сохранено ✔ Срок: ' + (nx ? fmtDateShort(nx.d) + ' ' + nx.t.split(' - ')[0] : '—')
+    : 'Задание убрано';
+  closeSheet();
+  setStatus(msg);
 }
 function attachReady(){
   if(!curKey) return;
-  const current = (pairData[curKey] && pairData[curKey].ready) || '';
+  const current = (tasks[curKey] && tasks[curKey].ready) || '';
   const val = prompt('Вставь текст готового решения:', current);
   if (val === null) return;
-  if(!pairData[curKey]) pairData[curKey] = {};
-  pairData[curKey].ready = val;
+  if(!tasks[curKey]) tasks[curKey] = { d: curPair.d, t: curPair.t, ds: curPair.ds };
+  tasks[curKey].ready = val;
+  tasks[curKey].readyAt = Date.now();
   savePairs();
   renderReady(val);
   renderLists();
@@ -753,16 +840,73 @@ function closeSheet(e){
   if(e && e.target && e.target.id !== 'overlay') return;
   document.getElementById('overlay').classList.remove('open');
 }
-function renderLists(){ renderToday(); if(viewDate) selectDay(viewDate); }
+function renderLists(){ renderToday(); if(viewDate) selectDay(viewDate); renderTaskList(); }
+
+// ====== СПИСОК ЗАДАНИЙ ======
+// То, чего раньше не было: не нужно глазами искать по расписанию, что задано
+// и на какую пару сдавать. Сортировка — по дате сдачи, ближайшая сверху.
+function taskList(){
+  const out = [];
+  for (const k in tasks){
+    if (k === '_loose') continue;
+    const rec = tasks[k];
+    if (!rec || ((!rec.dz || !rec.dz.trim()) && (!rec.ready || !rec.ready.trim()))) continue;
+    out.push({ id: k, rec: rec });
+  }
+  const now = Date.now();
+  out.sort(function(a, b){
+    const ad = a.rec.dueD ? new Date(a.rec.dueD + 'T' + (a.rec.dueT || '').split(' - ')[0] + ':00').getTime() : (a.rec.dzAt || 0);
+    const bd = b.rec.dueD ? new Date(b.rec.dueD + 'T' + (b.rec.dueT || '').split(' - ')[0] + ':00').getTime() : (b.rec.dzAt || 0);
+    // просроченные — вниз, остальное по дате сдачи
+    const ap = ad < now ? 1 : 0, bp = bd < now ? 1 : 0;
+    if (ap !== bp) return ap - bp;
+    return ad - bd;
+  });
+  return out;
+}
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderTaskList(){
+  const box = document.getElementById('taskList');
+  if (!box) return;
+  const list = taskList();
+  if (!list.length){ box.innerHTML = '<p class="empty">Заданий пока нет. Открой пару в «Расписании» и запиши ДЗ.</p>'; return; }
+  const now = Date.now();
+  box.innerHTML = list.map(function(x){
+    const rec = x.rec;
+    const hasDz = rec.dz && rec.dz.trim();
+    const hasReady = rec.ready && rec.ready.trim();
+    let dueTxt = 'срок не назначен';
+    let overdue = false;
+    if (rec.dueD){
+      const due = new Date(rec.dueD + 'T' + (rec.dueT || '').split(' - ')[0] + ':00');
+      overdue = due.getTime() < now;
+      dueTxt = (overdue ? 'просрочено: ' : 'сдать: ') + fmtDateShort(rec.dueD) + ' (' + dowOf(rec.dueD) + ') ' + (rec.dueT || '').split(' - ')[0];
+    }
+    const st = hasReady ? '<span class="tstat ok">✔ готово</span>'
+             : hasDz ? '<span class="tstat wait">✎ ждёт</span>'
+             : '';
+    return '<div class="tcard' + (overdue ? ' late' : '') + '" onclick="openById(\'' + x.id.replace(/'/g,"") + '\')">'
+      + '<div class="thead"><span class="tsub">' + esc(rec.ds || '—') + '</span>' + st + '</div>'
+      + '<div class="tdue">' + dueTxt + '</div>'
+      + (hasDz ? '<div class="tdz">' + esc(rec.dz) + '</div>' : '')
+      + (hasReady ? '<div class="tready">' + esc(rec.ready) + '</div>' : '')
+      + '<div class="tmeta">задали: ' + fmtDateShort(rec.d) + ' ' + (rec.t || '').split(' - ')[0] + '</div>'
+      + '</div>';
+  }).join('');
+}
+function openById(id){
+  const p = pairById(id);
+  if (p) openPair(p.d, p.t);
+}
 
 // ====== ЭКСПОРТ / ИМПОРТ JSON ======
 function exportJSON(){
   const payload = {
     app: 'sharaga',
-    version: 1,
+    version: 3,
     exported: new Date().toISOString(),
     group: 'Б-ОРМ-41',
-    pairData: pairData
+    tasks: tasks
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
   const a = document.createElement('a');
@@ -772,7 +916,7 @@ function exportJSON(){
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
-  setStatus('Экспортировано ✔ положи файл в папку university/дз');
+  setStatus('Экспортировано ✔ файл скачан, его можно положить в iCloud Drive');
 }
 function importJSON(ev){
   const file = ev.target.files[0];
@@ -782,14 +926,34 @@ function importJSON(ev){
   reader.onload = function(e){
     try {
       const data = JSON.parse(e.target.result);
-      if (data && data.app === 'sharaga' && data.pairData){
-        pairData = Object.assign({}, data.pairData);
-        savePairs();
-        renderLists();
-        setStatus('Импортировано ✔ задания готовы, смотри у пар');
+      let incoming = null;
+      if (data && data.app === 'sharaga' && data.tasks) incoming = data.tasks;
+      else if (data && data.app === 'sharaga' && data.pairData) incoming = data.pairData;   // старый формат
+      if (!incoming) { setStatus('⚠ Файл не похож на домашку «Шараги»'); return; }
+      // Раньше импорт ЗАМЕНЯЛ всё локальное — свежие записи пропали без спроса.
+      // Теперь сливаем по меткам времени, как с облаком.
+      if (data.version === 3){
+        tasks = mergeTasks(incoming, tasks);
       } else {
-        setStatus('⚠ Файл не похож на домашку «Шараги»');
+        // Старый файл без дат: раскладываем по парам, чтобы сроки посчитались.
+        const flat = {};
+        const now = Date.now();
+        for (const k in incoming){
+          const rec = incoming[k]; if (!rec) continue;
+          let d = null, t = null;
+          if (k.indexOf('|') >= 0){ const pp = k.split('|'); d = pp[0]; t = pp[1]; }
+          else {
+            const cands = PAIRS.filter(x => x.ds === k).sort((a,b) => startOf(a) - startOf(b));
+            const tgt = cands.filter(x => startOf(x) >= now)[0] || cands[0];
+            if (tgt){ d = tgt.d; t = tgt.t; }
+          }
+          if (d) flat[pairId(d, t)] = rec;
+        }
+        tasks = mergeTasks(flat, tasks);
       }
+      savePairs();
+      renderLists();
+      setStatus('Импортировано ✔ задания готовы, смотри у пар и в списке');
     } catch(err){
       setStatus('⚠ Ошибка при чтении файла');
     }
@@ -841,7 +1005,30 @@ function urlBase64ToUint8Array(base64String){
 }
 // Ключ отправителя. Пуши шлёт GitHub Actions (.github/workflows/push-reminders.yml),
 // а не воркер — у воркера никогда не было отправителя, поэтому пуши и не приходили.
-const VAPID_PUBLIC = 'BKzwddQMmCNRVSemZLt9l-_DDCYKfRHQzEQJEqZHu65qwkGuOxzFzGnwGwDbQEmv3CUPk5BHO4wGaOeaq35-8ro';
+// Ключ отправителя. Он больше НЕ зашит намертво: воркер генерирует пару
+// ключей сам и отдаёт публичную через /api/vapid. Зашитый ключ раньше
+// расходился с ключом воркера, из-за чего подписки делались «не под тем
+// ключом» и уведомления не приходили, а диагностика говорила «всё хорошо».
+const VAPID_FALLBACK = 'BKzwddQMmCNRVSemZLt9l-_DDCYKfRHQzEQJEqZHu65qwkGuOxzFzGnwGwDbQEmv3CUPk5BHO4wGaOeaq35-8ro';
+let VAPID_PUBLIC = VAPID_FALLBACK;
+const VKEY = 'sharaga_vapid_key';
+// Ключ подтягивается один раз и запоминается, чтобы подписка и проверка
+// «ключ актуален» всегда смотрели на одно и то же значение.
+function loadVapid(){
+  const cached = localStorage.getItem(VKEY);
+  if (cached) { VAPID_PUBLIC = cached; return Promise.resolve(cached); }
+  return cfFetch(pushServer() + '/api/vapid', null, 8000).then(function(d){
+    if (d && d.ok && d.publicKey){ VAPID_PUBLIC = d.publicKey; localStorage.setItem(VKEY, d.publicKey); }
+    return VAPID_PUBLIC;
+  }).catch(function(){ return VAPID_PUBLIC; });
+}
+
+// Кто шлёт напоминания. Сейчас это GitHub Actions по cron, а он запускается
+// раз в 3–6 часов вместо заявленных пяти минут, поэтому уведомления о парах
+// не приходят почти никогда. Надёжный вариант — воркер с таймером Cloudflare
+// (срабатывает каждую минуту). Пока воркер не перенастроен, это стоит
+// показывать прямо в диагностике, а не прятать.
+const PUSH_WORKER_OK = false;
 
 function pushServer(){
   return 'https://sharaga-sync.sharaga.workers.dev';
@@ -867,7 +1054,10 @@ function keyOf(sub){
 // Подписка на старый ключ бесполезна: отправитель подписывает новым и Apple
 // такой пуш отвергнет. Поэтому устаревшую подписку пересоздаём.
 function subscribePush(){
-  return regSW().then(function(reg){
+  // Ключ берём у воркера, а не из кода: иначе подписка снова уедет мимо.
+  return loadVapid().then(function(){
+    return regSW();
+  }).then(function(reg){
     return reg.pushManager.getSubscription().then(function(old){
       if (old && keyOf(old) === VAPID_PUBLIC) return old;
       const drop = old ? old.unsubscribe().catch(function(){}) : Promise.resolve();
@@ -1053,6 +1243,10 @@ function runDiag(){
     ('Notification' in window) ? Notification.permission : '—'));
   lines.push(diagLine('serviceWorker' in navigator, 'Service Worker', ('serviceWorker' in navigator) ? 'есть' : 'нет'));
   lines.push(diagLine(notifOn, 'Галочка «Напоминать»', notifOn ? 'включена' : 'выключена'));
+  // Сразу видно главное: помнит ли приложение, что сервер вообще шлёт напоминания.
+  // Раньше этого не было — поэтому «всё зелёное» не означало, что уведомления есть.
+  lines.push(diagLine(PUSH_WORKER_OK, 'Отправитель напоминаний',
+    PUSH_WORKER_OK ? 'воркер шлёт сам (таймер каждую минуту)' : 'воркер не шлёт — напоминания идут через GitHub, он опаздывает на часы'));
 
   // Каждая строка «Связь» появляется, как только её проверка закончилась —
   // иначе на телефоне с закрытым каналом экран молчит все 8 секунд.
@@ -1062,7 +1256,7 @@ function runDiag(){
     const tail = [
       '',
       '— Данные —',
-      diagLine(true, 'Записей с ДЗ', String(Object.keys(pairData).length)),
+      diagLine(true, 'Записей с ДЗ', String(taskList().length)),
       diagLine(!hasPending(), 'Очередь на отправку', hasPending() ? 'есть неотправленное' : 'пусто'),
       diagLine(true, 'Рабочий канал', localStorage.getItem(CHKEY) || 'ещё не определён'),
       '',
@@ -1082,13 +1276,24 @@ function runDiag(){
 
   if ('serviceWorker' in navigator){
     jobs.push(slot('Push-подписка', function(){
-      return navigator.serviceWorker.ready.then(function(reg){
-        return reg.pushManager.getSubscription().then(function(sub){
-          if (!sub) return diagLine(false, 'Push-подписка', 'НЕТ — включи галочку «Напоминать»');
-          const fresh = keyOf(sub) === VAPID_PUBLIC;
-          return diagLine(fresh, 'Push-подписка',
-            fresh ? ('есть, ключ актуальный (' + sub.endpoint.slice(0, 34) + '…)')
-                  : 'есть, но от СТАРОГО ключа — выключи и включи галочку «Напоминать»');
+      // Сверяем ключ подписки с тем, что реально отдаёт сервер. Раньше здесь
+      // сравнение шло с зашитым в код значением, и подписка «не под тем
+      // ключом» спокойно проходила как исправная.
+      return cfFetch(pushServer() + '/api/vapid', null, 8000).then(function(d){
+        const serverKey = (d && d.ok && d.publicKey) ? d.publicKey : '';
+        if (!serverKey) return diagLine(null, 'Push-подписка', 'сервер не отдал ключ — проверь связь');
+        if (serverKey !== VAPID_PUBLIC){
+          VAPID_PUBLIC = serverKey;
+          localStorage.setItem(VKEY, serverKey);
+        }
+        return navigator.serviceWorker.ready.then(function(reg){
+          return reg.pushManager.getSubscription().then(function(sub){
+            if (!sub) return diagLine(false, 'Push-подписка', 'НЕТ — включи галочку «Напоминать»');
+            const fresh = keyOf(sub) === serverKey;
+            return diagLine(fresh, 'Push-подписка',
+              fresh ? ('есть, ключ совпадает с сервером (' + sub.endpoint.slice(0, 34) + '…)')
+                    : 'есть, но ключ не совпадает с сервером — выключи и включи галочку «Напоминать»');
+          });
         });
       });
     }));
@@ -1110,35 +1315,39 @@ function runDiag(){
   // Проверка записи не должна ничего затирать: сперва читаем облако,
   // потом пишем объединённое. Если прочитать не вышло — не пишем вовсе.
   jobs.push(slot('Облако: запись (выгрузка ДЗ)', function(){
-    return cfFetch(CLOUD_URL).then(function(d){
-      const remote = (d && d.data && d.data.pairs) ? d.data.pairs : {};
-      const merged = Object.assign({}, remote, pairData);
-      const t0 = Date.now();
-      return cfFetch(CLOUD_URL, {
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-sync-key':CLOUD_KEY},
-        body: JSON.stringify({ pairs: merged })
-      }).then(function(){
-        clearPending();
-        localStorage.setItem(CHKEY, 'воркер');
-        return diagLine(true, 'Облако: запись (выгрузка ДЗ)', (Date.now() - t0) + ' мс, задания заодно выгружены');
-      }, function(e){
-        return diagLine(false, 'Облако: запись (выгрузка ДЗ)', errDetail(e));
-      });
+    return cloudWrite().then(function(){
+      clearPending();
+      return diagLine(true, 'Облако: запись (выгрузка ДЗ)', 'ок, задания в облаке');
     }, function(e){
-      return diagLine(false, 'Облако: запись (выгрузка ДЗ)', 'не проверял — не читается облако (' + errDetail(e) + ')');
+      return diagLine(false, 'Облако: запись (выгрузка ДЗ)', errDetail(e));
     });
   }));
 
-  jobs.push(slot('Запасной канал crudcrud', function(){
-    return probe(CRTD_URL).then(function(r){
-      return diagLine(r.ok, 'Запасной канал crudcrud', r.ok ? (r.ms + ' мс') : r.err);
-    });
-  }));
-
-  jobs.push(slot('Зеркало на GitHub Pages', function(){
-    return probe(CLOUD_MIRROR).then(function(r){
-      return diagLine(r.ok, 'Зеркало на GitHub Pages', r.ok ? (r.ms + ' мс') : r.err);
+  // Сколько заданий ждёт готового решения и сколько уже готово —
+  // главный вопрос перед «давай выполнять».
+  jobs.push(slot('Задания в облаке', function(){
+    return cloudRead().then(function(remote){
+      const merged = mergeTasks(remote || {}, tasks);
+      let waiting = 0, done = 0, late = 0;
+      const now = Date.now();
+      for (const k in merged){
+        if (k === '_loose') continue;
+        const r = merged[k];
+        if (r && r.dz && r.dz.trim()){
+          if (r.ready && r.ready.trim()) done++;
+          else {
+            waiting++;
+            if (r.dueD){
+              const d = new Date(r.dueD + 'T' + (r.dueT || '').split(' - ')[0] + ':00').getTime();
+              if (d < now) late++;
+            }
+          }
+        }
+      }
+      return diagLine(waiting === 0, 'Задания в облаке',
+        'ждут решения: ' + waiting + (late ? ' (просрочено: ' + late + ')' : '') + ' · готово: ' + done);
+    }, function(e){
+      return diagLine(false, 'Задания в облаке', errDetail(e));
     });
   }));
 
